@@ -27,12 +27,12 @@ int bianrySearch(int[] nums, int target)
 ##### 基本二分查找
 
 ```c++
-int right  = nums.lenght - 1; //注意初始化的值
+int right  = nums.length - 1; //注意初始化的值
 
 while(left <= right){
     int mid = left + (right - left) / 2;
     if(nums[mid] == target){
-        return mid;
+        return mid;     
     }else if(nums[mid] < target){
         left = mid + 1; //注意这里是mid + 1
     }else if(nums[mid] > target){
@@ -52,5 +52,76 @@ while(left <= right){
 
 比如数组nums = [1, 2, 2, 2, 3]，target为2，算法返回的索引是1，此算法无法保证得到左边界索引(1)或者右边界索引(3)。
 
+##### 寻找左边界的二分查找
 
+```c++
+int left_bound(int [] nums, int target)
+{
+	if(nums.length == 0) return -1;
+	int left = 0;
+	int right = nums.length; //注意
+	
+	while(left < right){
+		int mid = (left + right) / 2;
+		if(nums[mid] == target){
+			right = mid;    //注意[left, mid)，找到目标先不返回，继续缩小边界
+		}else if(nums[mid] < target){
+			left = mid + 1; //[mid + 1, right)]
+		}else if(nums[mid] > target){
+			right = mid;//注意
+		}
+	}
+    
+    if( left == nums.length ) return -1;
+    return nums[left] == target ? left : -1;
+}
+```
+
+##### 查找双闭区间的左边界二分查找
+
+```c++
+int left_bound(int [] nums, int target)
+{
+	int left = 0;
+	int right = nums.length - 1; //区间[left, right]
+	
+	while(left <= right){
+		int mid = (left + right) / 2;
+		if(nums[mid] == target){
+			right = mid - 1;//继续缩小右边界
+		}else if(nums[mid] < target){
+			left = mid + 1; //[mid + 1, right]
+		}else if(nums[mid] > target){
+			right = mid - 1;//注意[left, mid-1]
+		}
+	}
+    
+    if( left >= nums.length || nums[left] != target) return -1;
+    return left;
+}
+```
+
+##### 右边界二分查找
+
+```c++
+int right_bound(int[] nums, int target)
+{
+    if(nums.length == 0)return -1;
+    int left = 0, right = nums.length;
+    
+    while(left < right){
+        int mid = left + (right - left)/2;
+        if( nums[mid] == target){
+            left = mid + 1; //mid = left - 1
+        }else if(nums[mid] < target){
+            left = mid + 1;
+        }else if(nums[mid] > target){
+            right = mid;
+        }
+    }
+    
+    if(left == 0)return -1;
+    return nums[left -1] == target ? (left - 1) : -1;
+}
+```
 
