@@ -79,7 +79,124 @@ __doapl(complex* ths, const complex& r)
 
 临时对象声明执行完，下一行就消失了；
 
-### 3 拷贝构造、拷贝复制、析构
+### 3 拷贝构造、拷贝赋值、析构
+
+带指针的类，**必须**实现**拷贝构造**（深拷贝，new新的空间，将指针指向的内容拷贝过去）、**拷贝赋值**（重载 '=' 操作符，在赋值时候实现深拷贝，并且要判断是否自我赋值，作特殊处理）、**析构**（delete指针变量）
+
+以带指针的class为例子：String Class
+
+```c++
+class String{
+public:
+    String(const char* cstr = 0);    //构造函数
+    String(const String& str);       //拷贝构造（类带指针必须要写，传入参数是class类型）
+    Stirng & operater=(const String& str);//拷贝赋值（类带指针必须要写）
+    ~String();                            //析构 （类带指针必须要写）
+    char* get_c_str() const{return m_data};
+private:
+    char* m_data; 
+}
+
+inline
+String ::String(const char* cstr = 0)//标准写法
+{
+    if(cstr){ //指定初值
+        m_data = new char[strlen(cstr)+1]; //字符串需要加上结束符‘\0’
+        strcpy(m_data, cstr);
+    }
+    else{  //未指定初值
+        m_data = new char[1];
+        *m_data = '\0';
+    }
+}
+
+
+inline
+String::String(const String& str)//拷贝构造
+{
+    m_data = new char[ strlen(str.m_data) + 1 ] //深拷贝
+    strcpy(m_data, str.m_data);
+}
+
+inline
+Stirng& String::operater=(const String& str)//拷贝赋值
+{
+    if(this == &str) //重要，当发生自身赋值，避免自删，再赋值
+        return *this;
+    
+    delete[] m_data; //删除自身
+    m_data = new char[ strlen(str.m_data) + 1 ];//申请空间
+    strcpy(m_data, str.m_data);//赋值
+    return *this;
+}
+
+String::~String()
+{
+    delete[] m_data;
+}
+
+ostream& operator<<(ostream& os, const String& str)//要写成全局函数，而不是成员函数，因为成员函数，使用时候cout在右边，不符合使用习惯
+{
+    os << str.get_c_str();
+    return os;
+}
+
+int main()
+{
+    test_copy();
+    test_op();
+    String s1("hello");
+    cout<< s1;
+}
+
+void test_copy(void)
+{
+    String s1;         //调用构造函数
+    String s2("hello");//调用构造函数
+    
+    String* p = new String("hello");
+    delete p;
+    //离开的时候一共调用三次析构函数
+}//离开这个作用域范围前，必须手动释放指针(或者return).局部对象会自己消亡，但是指向对象的指针消失后，对象成为孤立状态
+
+void test_op(void)
+{
+    String s1("hello ");//调用构造函数
+    String s2(s1);//调用拷贝构造函数
+    s2 = s1;      //调用拷贝赋值函数
+}
+```
+
+### 4 堆、栈与内存管理
+
+#### 4.1 new
+
+先分配memory，在调用ctor
+
+```c++
+Complex* PC = new Complex(1,2);
+//编译器转换为实际执行步骤：
+1. void* mem = operater new( sizeof(Complex) ); //new内部调用的是malloc(n)
+2. pc = static_cast<Complex*>(mem);             //指针类型转换
+3. pc->Complex::Complex(1,2);                   //调用构造函数
+```
+
+
+
+#### 4.2 delete
+
+先调用dtor，再释放memory
+
+```c++
+Complex* PC = new Complex(1,2);
+.
+.
+.
+delete pc;
+//编译器转换为实际执行步骤：
+1.Complex::~Complex(pc);//析构函数
+2.operater delete(pc);  //释放内存，内部调用的是free(ps);
+```
 
 
 
