@@ -224,15 +224,95 @@ new [] 和 delete []，new 和 delete的区别：
 
 如果是指针数组，指针指向某类对象，当使用arry new申请内存空间，在调用的是delete [ ] 时候，编译器会认为需要对每个指针都调用析构函数，这样可以安全地释放掉所有对象；但是如果调用的是delete，编译器会认为需要对指针数组第一个成员调用一次析构，剩余的成员指针被直接删除，而其指向的对象没有掉用析构函数。
 
-#### 5 static
+### 5 static
 
-- 静态成员函数：
+static变量既不是在堆也不是栈，而是在静态存储区；
+
+- 静态static成员函数：
+
+  只存在一份函数，与对象数量无关；
+
+  非静态成员函数是根据this pointer来处理不同的对象，但是静态成员函数没有this pointer。
+
+  只能处理静态数据；
 
   
 
-- 静态成员变量：
+- 静态static成员变量：
 
-#### 6 类模板、函数模板
+  只存在一份变量，与对象数量无关；
+
+```c++
+calss Account{
+public:
+	static double m_rate;
+	static void set_rate(const double& x);
+};
+double Account::m_rate = 8.0; //class存在静态成员变量，只能通过这样的方式初始化变量
+
+int main(){
+	Account::set_rate(5.0);  //方式1：通过类名调用静态成员函数
+	
+	Account a;
+	a.set_rate(7.0);         //方式2：通过对象调用静态成员函数，值得注意的是，静态成员函数被调用时不会有隐藏的this pointer
+}
+```
+
+- 单例模式Singleton
+
+  一个class只能产生一个对象；
+
+  方式1 Singleton ：一开始就存在一个唯一的a对象
+
+  ```c++
+  class A{
+  public:    
+      static A& getInstance( return a; );
+      setup() {...}
+  private:
+      A();
+      A(const A& rhs);
+      static A a;          //只存在一个对象a
+      ...
+  };
+  
+  A::getInstance().setup();//调用的唯一接口
+  ```
+
+  方式2  Meyers’ Singleton ：第一次被调用才会存在唯一的a对象 
+
+  ```c++
+  class A{
+  public:    
+      static A& getInstance();
+      setup() {...}
+  private:
+      A();
+      A(const A& rhs);
+      ...
+  };
+  
+  A& A::getInstance()      //与方式1的差别
+  {
+      static A a;          //当该函数被调用，才会存在a对象，且只有一个a
+      return a;
+  }
+  
+  ```
+
+  
+
+### 6 类模板、函数模板
+
+### 
+
+### 7 组合与继承
+
+#### 7.1 Composition组合
+
+class可以有不同的类型的class组合；
+
+
 
 ## C++内存管理
 
