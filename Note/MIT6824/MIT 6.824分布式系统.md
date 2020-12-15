@@ -1,6 +1,12 @@
 ## MIT 6.824分布式系统
 
-### Lecure 2 PRC and Threads
+### Lecure 2 RPC and Threads
+
+RPC ( Remote Procedure Call ): 远程过程调用，简单的理解就是，一个节点请求另一个节点提供服务
+
+Cordination
+
+
 
 ### Lecure 3 GFS
 

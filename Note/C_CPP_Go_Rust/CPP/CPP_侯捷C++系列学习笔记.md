@@ -304,15 +304,64 @@ int main(){
 
 ### 6 类模板、函数模板
 
-### 
+template <typename T>
+
+template <class T>
 
 ### 7 组合与继承
 
-#### 7.1 Composition组合
+#### 7.1 Composition复合
 
 class可以有不同的类型的class组合；
 
+Composition(复合)关系下的构造和析构：
 
+- 构造由内而外
+
+  Container的构造函数首先调用Component的default构造函数，然后才执行自己；
+
+  值得注意的是，编译器在没有明确定义该调用哪个Component的析构函数，编译器默认是调用default，编译器默认生成的析构函数；
+
+  ```C++
+  Container::Container(...): Component() {...};
+  ```
+
+- 析构由外而外
+
+  Container的析构函数首先首先执行自己，然后调用Component的析构函数
+
+#### 7.2 Delegation(委托) Compositon by reference
+
+类内内部有指向别的类的指针；
+
+例子：PIML(Private Inplementation OR Pointer to Implementation),通过一个私有类成员指针，将指针所指向的类的内部实现实现、数据进行隐藏。
+
+- 降低模块耦合；
+- 降低编译依赖；
+- 接口与实现分离，提高接口稳定性。
+
+例子：reference counting
+
+renferen同一个对象，实现共享，同时可以count被多少个对象共享；
+
+对reference对象发生写操作，就复制一份数据，Copy on Write
+
+#### 7.3 Inheritance(继承)
+
+```mermaid
+graph LR
+Base
+```
+
+
+
+- 构造由内而外
+
+  
+
+- 析构由外而外
+
+  
 
 ## C++内存管理
 
