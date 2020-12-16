@@ -10,6 +10,17 @@ Cordination
 
 ### Lecure 3 GFS
 
+```mermaid
+graph LR
+WANT_PERFORMANCE-->NEED_SHARDING
+DONT_WANT_FAULTS-->NEED_TOLENRANCE
+WANT_TOLERANCE-->NEED_REPLICATION
+WANT_REPLICATION-->NEED_IN_CONSISCCENCY
+WANT_CONSISCENCY-->_LOW_PERFORMANCE
+```
+
+
+
 ### Lecure 4 Primary-Backup Replication
 
 ### Lecure 5 Go threads and Raft
