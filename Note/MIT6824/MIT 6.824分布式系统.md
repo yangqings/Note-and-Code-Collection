@@ -6,6 +6,8 @@ RPC ( Remote Procedure Call ): 远程过程调用，简单的理解就是，一�
 
 Cordination
 
+这节课的总结：
+
 
 
 ### Lecure 3 GFS
@@ -18,6 +20,48 @@ WANT_TOLERANCE-->NEED_REPLICATION
 WANT_REPLICATION-->NEED_IN_CONSISCCENCY
 WANT_CONSISCENCY-->_LOW_PERFORMANCE
 ```
+
+#### 3.1  GFS Target:
+
+- Big, Fast
+- Global, Universal
+- Sharding
+- Automatic Rcovering
+
+
+
+#### 3.2 Paper: *The Google File System* 
+
+主题：谷歌分布式文件系统
+
+##### 3.2.1 GFS设计原则：
+
+- 节点失效是常态
+- 存储内容以大文件为主
+
+##### 3.2.2 GFS集群架构：
+
+##### 3.2.3 chunk大小：
+
+##### 3.2.4 GFS元数据管理：
+
+##### 3.2.5 Namespace管理：
+
+##### 3.2.6 Chunk租约lease和变更顺序：
+
+##### 3.2.7 GFS集群常见操作流程：
+
+###### 3.2.7.1 文件写入：
+
+###### 3.2.7.2文件追加：
+
+###### 3.2.7.3 文件快照：
+
+###### 3.2.7.4 文件读取：
+
+
+
+#### 3.3 这节课的总结
 
 
 
