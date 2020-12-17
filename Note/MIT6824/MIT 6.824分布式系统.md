@@ -32,7 +32,7 @@ WANT_CONSISCENCY-->_LOW_PERFORMANCE
 
 #### 3.2 Paper: *The Google File System* 
 
-主题：谷歌分布式文件系统
+Topic：谷歌分布式文件系统
 
 ##### 3.2.1 GFS设计原则：
 
@@ -40,6 +40,8 @@ WANT_CONSISCENCY-->_LOW_PERFORMANCE
 - 存储内容以大文件为主
 
 ##### 3.2.2 GFS集群架构：
+
+![GFS集群架构](PIC/GFS Architecture.png)
 
 ##### 3.2.3 chunk大小：
 
