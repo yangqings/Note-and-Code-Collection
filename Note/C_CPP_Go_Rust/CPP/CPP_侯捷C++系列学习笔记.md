@@ -258,49 +258,49 @@ int main(){
 }
 ```
 
-- 单例模式Singleton
+单例模式Singleton
 
-  一个class只能产生一个对象；
+一个class只能产生一个对象；
 
-  方式1 Singleton ：一开始就存在一个唯一的a对象
+方式1 Singleton ：一开始就存在一个唯一的a对象
 
-  ```c++
-  class A{
-  public:    
-      static A& getInstance( return a; );
-      setup() {...}
-  private:
-      A();
-      A(const A& rhs);
-      static A a;          //只存在一个对象a
-      ...
-  };
-  
-  A::getInstance().setup();//调用的唯一接口
-  ```
+```c++
+class A{
+public:    
+    static A& getInstance( return a; );
+    setup() {...}
+private:
+    A();
+    A(const A& rhs);
+    static A a;          //只存在一个对象a
+    ...
+};
 
-  方式2  Meyers’ Singleton ：第一次被调用才会存在唯一的a对象 
+A::getInstance().setup();//调用的唯一接口
+```
 
-  ```c++
-  class A{
-  public:    
-      static A& getInstance();
-      setup() {...}
-  private:
-      A();
-      A(const A& rhs);
-      ...
-  };
-  
-  A& A::getInstance()      //与方式1的差别
-  {
-      static A a;          //当该函数被调用，才会存在a对象，且只有一个a
-      return a;
-  }
-  
-  ```
+方式2  Meyers’ Singleton ：第一次被调用才会存在唯一的a对象 
 
-  
+```c++
+class A{
+public:    
+    static A& getInstance();
+    setup() {...}
+private:
+    A();
+    A(const A& rhs);
+    ...
+};
+
+A& A::getInstance()      //与方式1的差别
+{
+    static A a;          //当该函数被调用，才会存在a对象，且只有一个a
+    return a;
+}
+
+```
+
+
 
 ### 6 类模板、函数模板
 
@@ -395,6 +395,181 @@ public:
 为什么最终能调用derived class的Serialize函数？
 
 因为this指针作为隐藏参数传入，编译器生成的实际函数是(*(this->ptr)\[n](this))，通过虚函数表找到derived class的Serialize函数。
+
+
+
+#### 7.5 Inheritance继承 & Composition复合
+
+调用构造函数和析构函数的顺序：
+
+```c++
+#include <iostream>
+
+using namespace std;
+
+class comp{
+public:
+    comp(){cout<<"call comp ctor!\n";};
+    ~comp(){cout<<"call comp dtor!\n";};    
+};
+
+
+class base{
+public:
+    base(){cout<<"call base ctor!\n";};
+    ~base(){cout<<"call base dtor!\n";};
+
+private:
+    comp comp1;
+};
+
+class derived:public base{
+public:
+    derived(){cout<<"call derived ctor!\n";};
+    ~derived(){cout<<"call derived dtor!\n";}; 
+};
+
+int main(int agrc, char* argv[])
+{
+    derived d1;
+    cout<<"end!\n";
+    return 0;
+}
+```
+
+```
+执行结果：
+call comp ctor!
+call base ctor!
+call derived ctor!
+end!
+call derived dtor!
+call base dtor!
+call comp dtor!
+```
+
+
+
+```c++
+#include <iostream>
+
+using namespace std;
+
+class comp{
+public:
+    comp(){cout<<"call comp ctor!\n";};
+    ~comp(){cout<<"call comp dtor!\n";};    
+};
+
+
+class base{
+public:
+    base(){cout<<"call base ctor!\n";};
+    ~base(){cout<<"call base dtor!\n";};
+};
+
+class derived:public base{
+public:
+    derived(){cout<<"call derived ctor!\n";};
+    ~derived(){cout<<"call derived dtor!\n";}; 
+
+private:
+    comp comp1;
+};
+
+int main(int agrc, char* argv[])
+{
+    derived d1;
+    cout<<"end!\n";
+    return 0;
+}
+```
+
+```
+执行结果：
+call base ctor!
+call comp ctor!
+call derived ctor!
+end!
+call derived dtor!
+call comp dtor!
+call base dtor!
+```
+
+
+
+#### 7.6 Delegation委托 & Inheritance继承
+
+- 解决的问题：一份数据，多种不同对象共享；
+- 思路：Observer设计模式，定义一系列对象之间的一对多关系，当一个对象改变、更新状态时，依赖它的都会收到通知改变或者更新。
+
+例子：数据只有一份，多个窗口(不同对象)以不同的形式把数据呈现出来；
+
+```c++
+class Subject{
+    int m_value;
+    vector<Observer *>m_views;
+public:
+    void attach(Observer* obs){
+        m_views.push_back(obs);
+    }
+    
+    void dettach(Oberver* obs){
+        
+    } 
+    void set_val(int value){
+        m_value = value;
+        notify();
+    }
+    void notify(){
+        for(int i = 0; i < m_views.size();++i){
+            m_views[i]->update(this, m_value);
+        }
+    }
+}
+
+class Observer{
+public:
+   virtual void update(Subject* sub, int value); 
+}
+```
+
+<img src="pic/Observer.png" style="zoom:90%" />
+
+#### 7.7 Compsite设计模式
+
+- 需要解决的问题：以文件系统为例子，目录可以放目录，也可以放文件；
+- 思路：目录和文件有共同的父类，目录"容器"存放指针，既可以放下目录指针，也可以放下文件文件指针；
+
+Composite设计模式又叫组合(组件)设计模式
+
+<img src="pic/Composite.png" style="zoom:90%" />
+
+
+
+#### 7.8 Prototype
+
+需要解决的问题：父类需要创建未来出现的子类class对象
+
+思路：设计接口，每一个子类创建一个实例存到父类的静态区
+
+<img src="pic/Prototype.png" style="zoom:90%" />
+
+子类私有的构造函数，完成addPrototype，增加原型到父类；另一个构造函数完成clone；
+
+## C++对象模型
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## C++内存管理
 
