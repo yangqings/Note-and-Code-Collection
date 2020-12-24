@@ -38,14 +38,14 @@ class Solution(){
 public:
     void sortColors(vecotr<int>& nums){
         int n = nums.size();
-        int p0, p1 = 0;
+        int p0, p1 = 0;//p0指向0的后一个位置，p1指向1的后一个位置
         for(int i = 0; i < n; ++i) {
             if(nums[i] == 1){
                 swap(nums[i], nums[p1]);
                 ++p1;
             }else if (nums[i] == 0) {
-                swap(nums[i],nums[p0]);
-                if(p0 < p1){
+                swap(nums[i],nums[p0]); //注意，这里把nums[i]换到了nums[p0]
+                if(p0 < p1){//p0可能和p1相同，但是不会大于p1
                     swap(nums[i], nums[p1]);
                 }
                 ++p0;
