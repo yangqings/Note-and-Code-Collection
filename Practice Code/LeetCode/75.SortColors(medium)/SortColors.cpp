@@ -34,7 +34,7 @@ public:
 
 
 //双指针，只进行一次遍历
-class Solution(){
+class Solution{
 public:
     void sortColors(vecotr<int>& nums){
         int n = nums.size();
