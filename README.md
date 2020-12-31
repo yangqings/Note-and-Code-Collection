@@ -1,14 +1,14 @@
 # Note-and-Code-Collection
 
-1. Collection of problems  and excellent code solutions from LeetCode.com, jiuzhang.com, pintia.cn and so on.
-2. Collection of learning notes, e.g. CSAPP, LINUX, Computer Network and so on. 
+1. Collection of code solutions from LeetCode.com, jiuzhang.com, pintia.cn and so on.
+2. Learning notes, e.g. CSAPP, OS, Distributed System, LINUX, Computer Network and so on. 
 3. Github project list.
 
 ###  目录结构：
 
-- **Github Project：**  值得收藏的开源项目列表
+- **Github Project：**  收藏的开源项目列表
 
-- **Note:**  我的学习笔记
+- **Note:**  我学习笔记
 
 - **Practice Code:** 练习代码
 
