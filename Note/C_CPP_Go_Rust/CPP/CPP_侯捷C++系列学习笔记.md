@@ -1025,11 +1025,63 @@ weak_ptr一般通过share_ptr来构造，通过expired函数检查原始指针�
 
 
 
-#### 3 function- like classes 仿函数
+#### 2.4 explicit关键字
 
-##### 
+只能用于修饰只有一个参数的类构造函数, 它的作用是表明该构造函数是显示的, 而非隐式的, 跟它相对应的另一个关键字是implicit, 意思是隐藏的,类构造函数默认情况下即声明为implicit(隐式).
+
+### 3 function- like classes 仿函数
+
+像函数的类，实际上是类中实现了opearter()，使得类有了类似函数的行为。
+
+### 4 Member Template
+
+在类模板内部包含了可变类型的的成员。
+
+![](\pic\memberTemplate.png)
 
 
+
+![](\pic\memberTemplate2.png)
+
+
+
+### 5 specialization 模板特化
+
+全泛化：
+
+```c++
+//泛化
+template <class Key>
+struct hash{};
+
+//特化
+```
+
+![](\pic\specialization1.png)
+
+
+
+偏特化（局部特化）
+
+![](\pic\specialization2.png)
+
+范围特化，原来是类型的特化，变成类型指针的特化。
+
+### 6 模板 模板参数
+
+![](\pic\templateparameters.png)
+
+
+
+模板第一个参数是类型，第二个参数是类模板，第一个类型参数用来实例化第二个类模板参数，知道有就行，比较少使用。
+
+### 7 部分C++11新特性
+
+#### 7.1 variadi  templates 可变数量模板参数
+
+ ![](\pic\variadiTemplate.png)
+
+看结果print，对每个
 
 ## 三 C++内存管理
 
