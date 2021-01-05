@@ -1,4 +1,4 @@
-# Notes-hub
+# NotesHub
 
 1. Collection of code solutions from LeetCode.com, jiuzhang.com, pintia.cn and so on.
 2. Learning notes, e.g. CSAPP, OS, Distributed System, LINUX, Computer Network and so on. 
