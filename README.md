@@ -6,7 +6,7 @@
 
 ###  目录结构：
 
-- **Github Project：**收藏的开源项目列表s
+- **Github Project：** 收藏的开源项目列表s
 
 - **Notes:**  笔记、资料、Lab Code
 
