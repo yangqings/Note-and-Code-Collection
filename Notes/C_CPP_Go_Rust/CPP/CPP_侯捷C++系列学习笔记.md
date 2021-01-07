@@ -1077,11 +1077,41 @@ struct hash{};
 
 ### 7 部分C++11新特性
 
-#### 7.1 variadi  templates 可变数量模板参数
+#### 7.1 variadi  templates 可变数量模板参数（语法糖）
 
  ![](\pic\variadiTemplate.png)
 
-看结果print，对每个
+   ... 表示一个pack包
+
+#### 7.2 auto自动类型推导
+
+#### 7.3 range-base for
+
+```c++
+vector<int> vec;
+...
+for(auto& elem : vec){
+    cout<< elem << endl;
+}
+```
+
+ ![](\pic\range-base for.png)
+
+
+
+### 8 reference
+
+reference 与 pointer
+
+区别：pointer可变，reference在初始化后，不可变。
+
+![](\pic\reference.png)
+
+![](\pic\reference用法.png)
+
+注意，same signature情况，const是函数签名的一部分
+
+### 9 object model 对象模型
 
 ## 三 C++内存管理
 
