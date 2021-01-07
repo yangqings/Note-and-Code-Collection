@@ -1115,7 +1115,15 @@ reference 与 pointer
 
 ## 三 C++内存管理
 
+### primitives
 
+### malloc/free
+
+### std::allocators
+
+### other allocators
+
+### loki::allocators
 
 ## 四 STL源码剖析
 
@@ -1128,3 +1136,4 @@ reference 与 pointer
 ## 六 C++11新特性
 
 ## 七 C++20新特性
+
