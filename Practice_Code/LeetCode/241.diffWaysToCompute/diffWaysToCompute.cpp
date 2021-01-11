@@ -93,7 +93,7 @@ public:
 
         while(index < input.size() && isdigit(input[index])) //把字符转换成数字
             num = num * 10 + input[index++] - '0';
-        if(index == input.size()){  //递归基，只有一个数字
+        if(index == input.size()){                           //递归基，只有一个数字
             hash[input] = {num};
             return {num};
         }
