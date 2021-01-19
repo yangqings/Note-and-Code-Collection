@@ -4,6 +4,10 @@
 
 思考-->计划-->动手-->debug-->总结-->笔记-->复习
 
+- data structure & algorithm, os, network, database, compiler
+- 编程范式：pop, oop, functional, generic, metaprogramming
+- 专业领域的必读Paper
+
 需要看的学习资料和学习进度记录在RoadMap.xmind和Computer_Science_Skill_Tree.xmind
 
 ------
