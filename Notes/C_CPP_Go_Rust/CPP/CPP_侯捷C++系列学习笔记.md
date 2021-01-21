@@ -206,7 +206,9 @@ delete pc;
 
 - case 1 分配内存块：
 
-<img src="pic/malloc_free.png" style="zoom:70%" />
+<div align=center>
+<img src="pic/malloc_free.png" width=80% />
+</div>
 
 malloc分配的内存（字节对齐，这里是16字节对齐），在数据的头尾加上标志，表示数据块的大小，并且最地位1表示内存被分配；
 
@@ -214,13 +216,17 @@ malloc分配的内存（字节对齐，这里是16字节对齐），在数据的
 
 - case2 分配的是数组：
 
-<img src="pic/malloc_free_2.png" style="zoom:70%" />
+<div align=center>
+<img src="pic/malloc_free_2.png" width=80% />
+</div>
 
 **为什么arry new要与delete [] 对应？**
 
 new [] 和 delete []，new 和 delete的区别：
 
-<img src="pic/malloc_free_3.png" style="zoom:70%" />
+<div align=center>
+    <img src = "pic/malloc_free_3.png" width=80% />
+</div>
 
 如果是指针数组，指针指向某类对象，当使用arry new申请内存空间，在调用的是delete [ ] 时候，编译器会认为需要对每个指针都调用析构函数，这样可以安全地释放掉所有对象；但是如果调用的是delete，编译器会认为需要对指针数组第一个成员调用一次析构，剩余的成员指针被直接删除，而其指向的对象没有掉用析构函数。
 
@@ -390,7 +396,11 @@ public:
 
 父类中的虚函数由子类实现，框架固定，需要灵活改变的函数由子类定位；
 
-<img src="pic/Inheritance.png" style="zoom:70%" />
+<div align=center>
+    <img src="pic/Inheritance.png" width="80%" />
+</div>
+
+
 
 为什么最终能调用derived class的Serialize函数？
 
@@ -543,9 +553,9 @@ public:
 
 Composite设计模式又叫组合(组件)设计模式
 
-<img src="pic/Composite.png" style="zoom:90%" />
-
-
+<div align=center>
+    <img src="pic/Composite.png" width="90%" />
+</div>
 
 #### 7.8 Prototype
 
@@ -611,9 +621,17 @@ shared_ptr
 
 迭代器也是一种智能指针，只是迭代器除了需要处理 * 和 ->，还要处理++和--等符号（指针移动，遍历容器）
 
-<img src="pic/pointer-like classes 迭代器 1.png" style="zoom:90%" />
+<div align = center>
+    <img src="pic/pointer-like classes 迭代器 1.png" width="90%" />
+</div>
 
-<img src="pic/pointer-like classes 迭代器.png" style="zoom:90%" />
+
+
+<div align=center>
+    <img src="pic/pointer-like classes 迭代器.png" width="90%" />
+</div>
+
+
 
 理解：->操作符是为了得到对象指针然后调用对应的方法，*先是解引用，得到对象，然后&得到对象的指针。
 
@@ -621,7 +639,7 @@ shared_ptr
 
 #### 2.3 其他智能指针
 
-##### auto_ptr
+auto_ptr
 
 （C++98的方案，C++11已经抛弃）采用所有权模式。
 
@@ -635,7 +653,7 @@ p2 = p1; //auto_ptr不会报错.
 
 此时不会报错，p2剥夺了p1的所有权，但是当程序运行时访问p1将会报错。所以auto_ptr的缺点是：存在潜在的内存崩溃问题！
 
-##### unique_ptr
+unique_ptr
 
 （替换auto_ptr）unique_ptr实现独占式拥有或严格拥有概念，保证同一时间内只有一个智能指针可以指向该对象。它对于避免资源泄露(例如“以new创建对象后因为发生异常而忘记调用delete”)特别有用。
 
@@ -681,7 +699,7 @@ ps1 = demo("alexia");
 cout << *ps2 << *ps1 << endl;
 ```
 
-##### shared_ptr
+shared_ptr
 
 shared_ptr实现共享式拥有概念。多个智能指针可以指向相同对象，该对象和其相关资源会在“最后一个引用被销毁”时候释放。从名字share就可以看出了资源可以被多个指针共享，它使用计数机制来表明资源被几个指针共享。可以通过成员函数use_count()来查看资源的所有者个数。除了可以通过new来构造，还可以通过传入auto_ptr, unique_ptr,weak_ptr来构造。当我们调用release()时，当前指针会释放资源所有权，计数减一。当计数等于0时，资源会被释放。
 
@@ -744,7 +762,7 @@ int main()
 }
 ```
 
-##### weak_ptr
+weak_ptr
 
 share_ptr虽然已经很好用了，但是有一点share_ptr智能指针还是有内存泄露的情况，当两个对象相互使用一个shared_ptr成员变量指向对方，会造成循环引用，使引用计数失效，从而导致内存泄漏。
 
@@ -829,11 +847,11 @@ reset 将 weak_ptr 置空.
 
 weak_ptr 支持拷贝或赋值, 但不会影响对应的 shared_ptr 内部对象的计数.
 
-##### share_ptr和weak_ptr的核心实现
+share_ptr和weak_ptr的核心实现
 
 weakptr的作为弱引用指针，其实现依赖于counter的计数器类和share_ptr的赋值，构造，所以先把counter和share_ptr简单实现
 
-##### Counter简单实现
+Counter简单实现
 
 
 
@@ -849,7 +867,7 @@ public:
 
 counter对象的目地就是用来申请一个块内存来存引用基数，s是share_ptr的引用计数，w是weak_ptr的引用计数，当w为0时，删除Counter对象。
 
-##### share_ptr的简单实现
+share_ptr的简单实现
 
 
 
@@ -935,7 +953,7 @@ private:
 
 share_ptr的给出的函数接口为：构造，拷贝构造，赋值，解引用，通过release来在引用计数为0的时候删除_ptr和cnt的内存。
 
-##### weak_ptr简单实现
+weak_ptr简单实现
 
 
 
@@ -1037,11 +1055,15 @@ weak_ptr一般通过share_ptr来构造，通过expired函数检查原始指针�
 
 在类模板内部包含了可变类型的的成员。
 
-![](\pic\memberTemplate.png)
+<div align=center>
+    <img src="pic\memberTemplate.png" width="80%" />
+</div>
 
 
 
-![](\pic\memberTemplate2.png)
+<div align=center>
+    <img src="pic\memberTemplate2.png" width="80%" />
+</div>
 
 
 
@@ -1057,21 +1079,25 @@ struct hash{};
 //特化
 ```
 
-![](\pic\specialization1.png)
-
-
+<div align=center>
+    <img src="pic\specialization1.png" width="80%" />
+</div>
 
 偏特化（局部特化）
 
-![](\pic\specialization2.png)
+<div align=center>
+    <img src="pic\specialization2.png" width="80%" />
+</div>
+
+
 
 范围特化，原来是类型的特化，变成类型指针的特化。
 
 ### 6 模板 模板参数
 
-![](\pic\templateparameters.png)
-
-
+<div align=center>
+    <img src="pic\templateparameters.png" width="80%" />
+</div>
 
 模板第一个参数是类型，第二个参数是类模板，第一个类型参数用来实例化第二个类模板参数，知道有就行，比较少使用。
 
@@ -1079,7 +1105,9 @@ struct hash{};
 
 #### 7.1 variadi  templates 可变数量模板参数（语法糖）
 
- ![](\pic\variadiTemplate.png)
+<div align=center>
+    <img src="pic\variadiTemplate.png" width="80%" />
+</div>
 
    ... 表示一个pack包
 
@@ -1095,7 +1123,9 @@ for(auto& elem : vec){
 }
 ```
 
- ![](\pic\range-base for.png)
+ <div align=center>
+    <img src="pic\range-base for.png" width="80%" />
+</div>
 
 
 
@@ -1105,9 +1135,13 @@ reference 与 pointer
 
 区别：pointer可变，reference在初始化后，不可变。
 
-![](\pic\reference.png)
+ <div align=center>
+    <img src="pic\reference.png" width="80%" />
+</div>
 
-![](\pic\reference用法.png)
+<div align=center>
+    <img src="pic\reference用法.png" width="80%" />
+</div>
 
 注意，same signature情况，const是函数签名的一部分
 
@@ -1117,7 +1151,9 @@ reference 与 pointer
 
 虚指针vptr指向虚函数表vtbl，只要对象有虚成员函数，对象的内存占用大小会多出虚函数指针的内存大小。
 
-![](pic\object model\vptr.png)
+<div align=center>
+    <img src="pic\object model\vptr.png" width="80%" />
+</div>
 
 可以看到对象B重新override实现了 vfunc1，所以虚函数指针指向的vtbl的第一项被修改，指向了B::vfunc1，同理，对象C也是如此。
 
@@ -1138,7 +1174,15 @@ C++编译器对virtual的
 
 ## 三 C++内存管理
 
-### primitives
+<div align=center>
+    <img src="pic\memory\0 C++ Aplication.png" width="80%" />
+</div>
+
+### primitives 基本工具
+
+<div align=center>
+    <img src="pic\memory\1.png" width="80%" />
+</div>
 
 ### malloc/free
 
