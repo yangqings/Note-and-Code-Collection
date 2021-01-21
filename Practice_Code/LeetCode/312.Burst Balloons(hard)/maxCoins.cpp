@@ -42,3 +42,39 @@ private:
         return rec[left][right];
     }
 };
+
+/**
+ * @brief 动态规划法
+ *        dp[i][j]表示填满开区间能得到的最多硬币数
+ */
+
+class Solution {
+public:
+    int maxCoins(vector<int>& nums) {
+        int n = nums.size();
+        int rec[n+2][n+2];
+        int val[n+2];
+        val[0] = val[n+1] = 1;
+        for(int i = 1; i <= n; ++i){
+            val[i] = nums[i-1];
+        }
+
+        for(int i = 0; i<n+2; ++i){
+            for(int j = 0;j<n+2; ++j){
+                rec[i][j] = 0;
+            }
+        }
+
+        for(int i=n-1; i >= 0; i--){
+            for(int j = i+2; j <= n+1; j++){
+                for(int k = i+1; k < j; k++){
+                    int sum = val[i] * val[k] * val[j];
+                    sum += rec[i][k] + rec[k][j];
+                    rec[i][j] = max(rec[i][j], sum);
+                }
+            }
+        }
+
+        return rec[0][n+1];
+    }
+};
