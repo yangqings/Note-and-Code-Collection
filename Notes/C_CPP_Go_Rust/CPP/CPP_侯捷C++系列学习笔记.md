@@ -1178,19 +1178,98 @@ C++编译器对virtual的
     <img src="pic\memory\0 C++ Aplication.png" width="80%" />
 </div>
 
-### primitives 基本工具
+### 1 primitives 基本工具
 
 <div align=center>
     <img src="pic\memory\1.png" width="80%" />
 </div>
+### 2 new/delete
 
-### malloc/free
+new：
 
-### std::allocators
+- 分配内存 ::operater new()
+- 调用构造函数
 
-### other allocators
+<div align=center>
+    <img src="pic\memory\2 new.png" width="80%" />
+</div>
 
-### loki::allocators
+<div align=center>
+    <img src="pic\memory\3 delete.png" width="80%" />
+</div>
+
+
+
+Array new/delete
+
+- new []调用的是默认构造函数，没有办法设初值，必须要有默认构造函数；
+- array new和new的内存布局时不一样的，array new的成员个数也被保存在内存；
+- 当new申请的是一个对象指针数组的时候，需要用delete []，否则，没有调用所有的对象析构函数进行析构，造成内存泄漏（注意，使用delete并不会造成申请的数组内存泄露，而是delete只调用一次析构函数，数组后面的对象的析构函数没有被调用，但是对象指针却被删除）；
+
+<div align=center>
+    <img src="pic\memory\4 array new.png" width="90%" />
+</div>
+
+
+
+placement new
+
+- placement new允许将对象构建在allocated memory中
+- 无placement delete
+
+<div align=center>
+    <img src="pic\memory\5 placement new.png" width="90%" />
+</div>
+
+<div align=center>
+    <img src="pic\memory\6 内存分配实现.png" width="100%" />
+</div>
+
+有重载，走路线1
+
+无重载，走路线2
+
+- 重载 ::operator new / ::operater delete（全局，影响所有）
+
+<div align=center>
+    <img src="pic\memory\7 重载1.png" width="100%" />
+</div>
+
+- 重载 operater new / operater delete
+
+<div align=center>
+    <img src="pic\memory\8 重载2.png" width="100%" />
+</div>
+
+注意这两个**重载函数必须是静态**，因为对象未被构建时候就要调用这两个函数。
+
+重载new delete，实现内存池
+
+- 重载 operater new[] / operater delete[]
+
+<div align=center>
+    <img src="pic\memory\9 重载3.png" width="100%" />
+</div>
+
+### 3 malloc/free
+
+### 4 std::allocators
+
+### 5 other allocators
+
+### 6 loki::allocators
+
+
+
+new，delete与malloc，free之间的关系与差别([引用](https://www.cnblogs.com/ywliao/articles/8116622.html))：
+
+- new操作符从自由存储区（free store）上为对象动态分配内存空间，而malloc函数从堆上动态分配内存。自由存储区是C++基于new操作符的一个抽象概念，凡是通过new操作符进行内存申请，该内存即为自由存储区。而堆是操作系统中的术语，是操作系统所维护的一块特殊内存，用于程序的内存动态分配，C语言使用malloc从堆上分配内存，使用free释放已分配的对应内存。那么自由存储区是否能够是堆（问题等价于new是否能在堆上动态分配内存），这取决于operator new 的实现细节。自由存储区不仅可以是堆，还可以是静态存储区，这都看operator new在哪里为对象分配内存。
+- new操作符内存分配成功时，返回的是对象类型的指针，类型严格与对象匹配，无须进行类型转换，故new是符合类型安全性的操作符。而malloc内存分配成功则是返回void * ，需要通过强制类型转换将void*指针转换成我们需要的类型。
+- new内存分配失败时，会抛出bac_alloc异常，会返回NULL；malloc分配内存失败时返回NULL。
+- 使用new操作符申请内存分配时无须指定内存块的大小，编译器会根据类型信息自行计算，而malloc则需要显式地指出所需内存的尺寸。
+- new，delete会调用对象的构造和析构函数同时申请或释放内存，而malloc，free则不会调用构造或析构函数。
+- C++提供了new[]与delete[]来专门处理数组类型
+- operator new /operator delete的实现可以基于malloc，而malloc的实现不可以去调用new。
 
 ## 四 STL源码剖析
 
