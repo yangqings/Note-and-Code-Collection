@@ -62,6 +62,9 @@ $ rustup doc
 <div align=center>
     <img src="image/3 Rust Cargo.png" width="90%">
 </div>
+- cargo run
+- cargo check
+- cargo build
 
 ## 3 基本数据类型
 
