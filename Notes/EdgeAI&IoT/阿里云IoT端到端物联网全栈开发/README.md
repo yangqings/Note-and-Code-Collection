@@ -73,5 +73,18 @@
     <img src="images\7 阿里云IoT平台侧的MQTT实现.png" width="100%" />
 </div>
 
+
+### 设备端代码工程结构（重点）
+
+#### 整体架构
+
+<div align=center>
+    <img src="images\8 设备软件架构.png" width="100%" /">
+</div>
+
+#### 网络数据流分层
+
+
+
 ## 服务器端代码实现
 
