@@ -15,7 +15,8 @@ Rust学习资料
 
 ------
 
-
+- Rust权威指南
+- The Rust Programme Language
 
 ### 视频教程
 
