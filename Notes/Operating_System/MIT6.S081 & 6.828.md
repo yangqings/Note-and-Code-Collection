@@ -12,6 +12,14 @@
 
   因为....
 
+Operating system organization，操作系统三大要求
+
+- multiplexing
+- isolation
+- interaction
+
+monolithic kerne 单内核
+
 #### 2.1 Lab
 
 ##### 安装环境与编译系统
