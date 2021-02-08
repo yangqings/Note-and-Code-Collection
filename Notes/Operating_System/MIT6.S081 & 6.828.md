@@ -83,11 +83,54 @@ init: starting sh
 $
 ```
 
+To quit qemu type: `Ctrl-a x`
+
 ##### 实现一个sleep程序
 
-```c
+源码写在lab/user/sleep.c 
 
+```c
+/**
+ * @file sleep.c
+ * @author YangQingsheng
+ * @brief Implement the UNIX program sleep for xv6
+ * @version 0.1
+ * @date 2021-02-08
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
+#include "kernel/types.h"
+#include "kernel/stat.h"
+#include "user/user.h"
+
+int main(int argc, char *argv[])
+{
+    int seconds;
+    if(argc != 2){
+        fprintf(2, "usage: sleep [seconds]\n");
+        exit(1);
+    }
+
+    seconds = atoi(argv[1]);
+
+    if(seconds < 0){
+        fprintf(2, "sleep: parameter error\n");
+        exit(1);
+    }
+
+    sleep(seconds);
+    //fprintf(2, "sleep %d seconds done\n",seconds);
+
+    exit(0);
+}
 ```
+
+在Makefile的UPROGS添加_sleep
+
+执行`make grade` 测试代码
+
+
 
 ### Lec2 C & GDB
 
