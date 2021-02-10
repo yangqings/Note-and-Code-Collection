@@ -1271,15 +1271,56 @@ new，delete与malloc，free之间的关系与差别([引用](https://www.cnblog
 - C++提供了new[]与delete[]来专门处理数组类型
 - operator new /operator delete的实现可以基于malloc，而malloc的实现不可以去调用new。
 
-## 四 STL源码剖析
+
+
+## 四 C++STL与泛型编程
+
+数据和处理数据的方法分离，和OO（面向对象）把数据和处理数据的方法放在一起的做法不样。
+
+|      六大组件      |               作用               |
+| :----------------: | :------------------------------: |
+|  容器 Containers   |         存放数据的主体：         |
+| 分配器 Allocators  |                                  |
+|  算法 Algorithms   |   处理数据的方法：排序、查找等   |
+| 迭代器   Iterators | 访问数据的操作方法，像泛化的指针 |
+| 适配器   Adapters  |                                  |
+| 仿函数   Functors  |                                  |
+
+例子：
+
+<div align=center>
+    <img src="pic/stl/stl0.png" width="60%" />
+</div>
 
 
 
-## 五 C++STL与泛型编程
+### 容器
+
+- Sequence Container 序列式
+- Associative Container 关联式
+- Unordered Containers 无序容器(C++11增加)
+
+### 算法
+
+- sort  排序
+  - 
+- search查找
 
 
 
-## 六 C++11新特性
+### 源码
 
-## 七 C++20新特性
+OOP面向对象，数据与方法绑定
+
+GP 数据与方法分离，标准库采用的是GP（Generic Programming）
+
+
+
+## 五 C++11新特性
+
+## 六 C++14新特性
+
+## 七 C++17新特性
+
+## 八 C++20新特性
 
