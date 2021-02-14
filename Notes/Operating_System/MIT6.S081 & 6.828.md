@@ -1,3 +1,5 @@
+
+
 ## MIT6.S081 & 6.828
 
 ### Lec1 介绍
@@ -87,6 +89,20 @@ To quit qemu type: `Ctrl-a x`
 
 ##### 实现一个sleep程序
 
+> Implement the UNIX program sleep for xv6; your sleep should pause for a user-specified number of ticks. A tick is a notion of time defined by the xv6 kernel, namely the time between two interrupts from the timer chip. Your solution should be in the file user/sleep.c. 
+
+> Some hints:
+>
+> - Before you start coding, read Chapter 1 of the xv6 book.
+> - Look at some of the other programs in user/ (e.g., user/echo.c, user/grep.c, and user/rm.c) to see how you can obtain the command-line arguments passed to a program.
+> - If the user forgets to pass an argument, sleep should print an error message.
+> - The command-line argument is passed as a string; you can convert it to an integer using atoi (see user/ulib.c).
+> - Use the system call sleep.
+> - See kernel/sysproc.c for the xv6 kernel code that implements the sleep system call (look for sys_sleep), user/user.h for the C definition of sleep callable from a user program, and user/usys.S for theassembler code that jumps from user code into the kernel for sleep.
+> - Make sure main calls exit() in order to exit your program.
+> - Add your sleep program to UPROGS in Makefile; once you've done that, make qemu will compile your program and you'll be able to run it from the xv6 shell.
+> - Look at Kernighan and Ritchie's book The C programming language (second edition) (K&R) to learn about C. 
+
 源码写在lab/user/sleep.c 
 
 ```c
@@ -129,6 +145,83 @@ int main(int argc, char *argv[])
 在Makefile的UPROGS添加_sleep
 
 执行`make grade` 测试代码
+
+##### 实现一个pingpong程序
+
+> Write a program that uses UNIX system calls to ''ping-pong'' a byte between two processes over a pair of pipes, one for each direction. The parent should send a byte to the child; the child should print "<pid>: received ping", where <pid> is its process ID, write the byte on the pipe to the parent, and exit; the parent should read the byte from the child, print "<pid>: received pong", and exit. Your solution should be in the file user/pingpong.c.
+>
+
+> Some hints:
+>
+> - Use pipe to create a pipe.
+> - Use fork to create a child.
+> - Use read to read from the pipe, and write to write to the pipe.
+> - Use getpid to find the process ID of the calling process.
+> - Add the program to UPROGS in Makefile.
+> - User programs on xv6 have a limited set of library functions available to them. You can see the list in user/user.h; the source (other than for system calls) is in user/ulib.c, user/printf.c, and user/umalloc.c. 
+
+思路，两个管道，父进程通过管道1发送，子进程接收到内容后，通过管道2发送，父进程接收
+
+源码
+
+```c
+#include "kernel/types.h"
+#include "user/user.h"
+
+int main(int argc, char *argv[])
+{
+    int pipe1_p2c[2],pipe2_c2p[2];//two pipe, pipe[0]:read, pipe[1]:wirte
+    char buffer[] = {'Y'};
+    long length = sizeof(buffer);
+    pipe(pipe1_p2c);   
+    pipe(pipe2_c2p);
+
+
+
+    if(fork() == 0){ //child
+        close(pipe1_p2c[1]);
+        close(pipe2_c2p[0]);
+
+        if(read(pipe1_p2c[0],buffer,length) != length){
+            printf("parent--pipe-->child error\n");
+            exit(1);
+        }
+
+        printf("%d: received ping\n",getpid());
+
+        if(write(pipe2_c2p[1],buffer,length) != length){
+            printf("child--piepe-->parent error\n");
+            exit(1);
+        }
+        exit(0);
+    }
+    
+    //parent
+    close(pipe1_p2c[0]);
+    close(pipe2_c2p[1]);
+
+    if(write(pipe1_p2c[1],buffer,length) != length){
+        printf("parent--pipe-->child error\n");
+        exit(1);
+    }
+
+    if(read(pipe2_c2p[0], buffer, length) != length){
+        printf("child--pipe-->parent error\n");
+        exit(1);
+    }
+
+    printf("%d: received pong\n",getpid());
+
+    exit(0);
+}
+
+```
+
+执行测试
+
+```bash
+$./grade-lab-util pingpong
+```
 
 
 
