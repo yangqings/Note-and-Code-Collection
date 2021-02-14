@@ -225,6 +225,123 @@ $./grade-lab-util pingpong
 
 
 
+##### 利用管道与多进程打印质数
+
+参考资料：[CSP Threads](https://swtch.com/~rsc/thread/) ，[CSDN](https://blog.csdn.net/zhayujie5200/article/details/106600925?utm_medium=distribute.pc_relevant.none-task-blog-baidujs_title-2&spm=1001.2101.3001.4242)
+
+primes的功能是输出2~35之间的素数，实现方式是递归fork进程并使用管道链接，形成一条pipeline来对素数进行过滤。
+
+每个进程收到的第一个数p一定是素数，后续的数如果能被p整除则之间丢弃，如果不能则输出到下一个进程，详细介绍可参考文档。伪代码如下：
+
+```c
+void primes() {
+  p = read from left   // 从左边接收到的第一个数一定是素数
+  if (fork() == 0): 
+    primes()           // 子进程，进入递归
+  else: 
+    loop: 
+      n = read from left  // 父进程，循环接收左边的输入  
+      if (p % n != 0): 
+        write n to right  // 不能被p整除则向右输出   
+}
+```
+
+<div align=center>
+    <img src="pic/sieve.gif" width="70%"/>
+</div>
+
+还需要注意两点：
+
+- 文件描述符溢出： xv6限制fd的范围为0~15，而每次pipe()都会创建两个新的fd，如果不及时关闭不需要的fd，会导致文件描述符资源用尽。这里使用重定向到标准I/O的方式来避免生成新的fd，首先close()关闭标准I/O的fd，然后使用dup()复制所需的管道fd（会自动复制到序号最小的fd，即关闭的标准I/O），随后对pipe两侧fd进行关闭（此时只会移除描述符，不会关闭实际的file对象）。
+
+- pipeline关闭： 在完成素数输出后，需要依次退出pipeline上的所有进程。在退出父进程前关闭其标准输入fd，此时read()将读取到eof（值为0），此时同样关闭子进程的标准输入fd，退出进程，这样进程链上的所有进程就可以退出。
+
+源码
+
+```c++
+#include "kernel/types.h"
+#include "user/user.h"
+
+void func(int *input, int length){
+    if(length == 1){             //递归基
+        printf("prime %d\n",*input);
+        return;
+    }
+
+    int p[2];
+    int prime = *input;
+    int temp;
+
+    printf("prime %d\n",*input);//管道左侧（先进先出）第一个值一定是prime number
+    pipe(p);
+    
+    int i;
+    if(fork() == 0){            //子进程
+        for(i = 0; i < length; ++i){
+            temp = *(input + i);
+            write(p[1], (char*)(&temp), 4);//往管道写入数据
+        }
+        exit(0);
+    }
+    close(p[1]); //重要
+
+    if(fork() == 0){           //子进程
+        int temp_length = 0;
+        char temp_buffer[4];
+        int temp_value;
+        while(read(p[0],temp_buffer,4) != 0){ //读取管道数据
+            temp_value = *((int *)temp_buffer);
+            if(temp_value % prime != 0){      //不能被当前质数整除继续
+                *input = temp_value;          //按顺序写入数组，覆盖原来的数据
+                input += 1;
+                temp_length ++;
+            }//操作完成后，能被当前的质数整除的数字被抛弃，数据长度变短
+        }
+        func(input - temp_length, temp_length);//由于使用的是指针，将指针回退到数组首地址，递归
+        exit(0);
+    }
+
+	wait(0);
+	wait(0);
+}
+
+int main(){
+    int input[34];
+	int i = 0;
+	for(; i < 34; i++){
+		input[i] = i+2;
+	}
+	func(input, 34);
+    exit(0);
+}
+
+```
+
+```bash
+xv6 kernel is booting
+
+hart 1 starting
+hart 2 starting
+init: starting sh
+$ primes
+prime 2
+prime 3
+prime 5
+prime 7
+prime 11
+prime 13
+prime 17
+prime 19
+prime 23
+prime 29
+prime 31
+$ QEMU: Terminated
+root@ubuntu:~/Myfile/mitos/xv6-labs-2020# ./grade-lab-util primes
+make: 'kernel/kernel' is up to date.
+== Test primes == primes: OK (1.5s) 
+    (Old xv6.out.primes failure log removed)
+```
+
 ### Lec2 C & GDB
 
 ------
