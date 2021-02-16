@@ -247,8 +247,9 @@ void primes() {
 ```
 
 <div align=center>
-    <img src="pic/sieve.gif" width="70%"/>
+    <img src="pic/MIT/sieve.gif" width="70%"/>
 </div>
+
 
 还需要注意两点：
 
