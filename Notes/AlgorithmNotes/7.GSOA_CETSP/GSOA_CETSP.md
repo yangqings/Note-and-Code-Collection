@@ -2,9 +2,9 @@
 
 根据SOM改进的方法GSOA，解决CETSP问题，论文出处
 
-### 概述
+### compile & install
 
-工程目录结构
+工程目录结构如下：
 
 ```c
 .
@@ -57,7 +57,7 @@ $sudo apt-get install libcairo2
 
 log4cxx库需要自行下载源码和依赖，然后编译，[教程](https://blog.csdn.net/qq_19288615/article/details/78182492?depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromBaidu-2&utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromBaidu-2)。
 
-2. 编译
+- 编译
 
    进入工程目录，执行命令
 
@@ -65,19 +65,25 @@ log4cxx库需要自行下载源码和依赖，然后编译，[教程](https://bl
    $sudo ./install-cmake_build.sh
    ```
 
-3. 运行
+- 运行
 
    进入build目录，运行程序
 
    ```shell
-   $./tcetsp
+   $./tcetsp-bezier-gsoa
    ```
 
-   
+   加上 `--help`查看帮助，有几个配置仿真的option（可以修改cfg文件配置，也可以用命令行参数配置）
+
+   - General options
+
+   - GUI options
+
+   - Solver options
 
 ### tcetsp-bezier-gsoa.cc
 
-主函数入口
+`cetsp-bezier-gsoa/src/tcetsp-bezier-gsoa.cc`，主函数入口在这个源文件中
 
 |                函数名称                |      功能      | 参数 | 返回值 |
 | :------------------------------------: | :------------: | :--: | :----: |
@@ -85,3 +91,24 @@ log4cxx库需要自行下载源码和依赖，然后编译，[教程](https://bl
 | bool parseArgs(int argc, char *argv[]) | 解析命令行参数 |      |        |
 |                                        |                |      |        |
 
+### gsoa_cetsp_bezier.cc
+
+`cetsp-bezier-gsoa/src/gsoa_cetsp_bezier.cc`，主要的算法在这个源文件。
+
+| 函数名称 | 功能 | 参数 |
+| :------: | :--: | :--: |
+|          |      |      |
+|          |      |      |
+|          |      |      |
+
+
+
+### generate_random_problem.cc
+
+`cetsp-bezier-gsoa/src/generate_random_problem.cc`，在原工程基础上添加的源码，主要用来生成随机的数据集，在原工程所有代码被执行之前调用。
+
+| 函数名称 | 功能 | 参数 |
+| :------: | :--: | :--: |
+|          |      |      |
+|          |      |      |
+|          |      |      |
