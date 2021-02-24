@@ -22,7 +22,7 @@ Operating system organization，操作系统三大要求
 
 monolithic kerne 单内核
 
-#### 2.1 Lab
+#### 1.2 Lab
 
 ##### 安装环境与编译系统
 
@@ -343,13 +343,208 @@ make: 'kernel/kernel' is up to date.
     (Old xv6.out.primes failure log removed)
 ```
 
+
+
+##### find
+
+> Write a simple version of the UNIX find program: find all the files in a directory tree with a specific name. Your solution should be in the file user/find.c. 
+
+```c
+#include "kernel/types.h"
+#include "kernel/fcntl.h"
+#include "kernel/stat.h"
+#include "kernel/fs.h"
+#include "user/user.h"
+
+char* fmt_name(char *path){
+    static char buf[DIRSIZ+1];
+    char *p;
+
+    for(p = path + strlen(path); p >= path && *p != '/'; p--);
+    p++;
+    memmove(buf, p, strlen(p)+1);
+    return buf;
+}
+
+
+void eq_print(char *fileName, char *findName){
+    if(strcmp(fmt_name(fileName), findName) == 0){
+        printf("%s\n", fileName);
+    }
+}
+
+void find(char *path, char *findName){
+    int fd;
+    struct stat st;
+    if((fd = open(path, O_RDONLY)) < 0){
+        fprintf(2, "find: cannot open %s\n", path);
+        return;
+    }
+
+    if(fstat(fd, &st) < 0){
+        fprintf(2, "find: connot stat %s\n", path);
+        close(fd);
+        return;
+    }
+    char buf[512],*p;
+    struct dirent de;
+    switch(st.type){
+        case T_FILE:
+            eq_print(path, findName);
+            break;
+        case T_DIR:
+            if( strlen(path) + 1 + DIRSIZ + 1 > sizeof(buf)){
+                printf("find: path too long\n");
+                break;               
+            }
+            strcpy(buf, path);
+            p = buf + strlen(buf);
+            *p++ = '/';
+            while( read(fd, &de, sizeof(de)) == sizeof(de) ){
+                //printf("de.name: %s. de.inum: %d\n", de.name, de.inum);
+                if(de.inum == 0 || de.inum == 1 || strcmp(de.name, ".")==0)
+                    continue;
+                memmove(p, de.name, strlen(de.name));
+                p[strlen(de.name)] = 0;
+                find(buf, findName);
+            }
+            break;
+
+    }
+    close(fd);
+}
+
+
+int main(int argc, char *argv[]){
+    if(argc < 3){
+        printf("find: find <[path]> <fileName>\n");
+        exit(0);
+    }
+    find(argv[1], argv[2]);
+    exit(0);
+}
+```
+
+##### xargs
+
+```c
+#include "kernel/types.h"
+#include "user/user.h"
+
+int main(int argc, char *argv[]){
+    int i;
+    int j = 0;
+    int k;
+    int l,m = 0;
+    char block[32];
+    char buf[32];
+    char *p = buf;
+    char *lineSplit[32];
+    for(i = 1; i < argc; i++){
+        lineSplit[j++] = argv[i];
+    }
+    while( (k = read(0, block, sizeof(block))) > 0){
+        for(l = 0; l < k; l++){
+            if(block[l] == '\n'){
+                buf[m] = 0;
+                m = 0;
+                lineSplit[j++] = p;
+                p = buf;
+                lineSplit[j] = 0;
+                j = argc - 1;
+                if(fork() == 0){
+                    exec(argv[1], lineSplit);
+                }                
+                wait(0);
+            }else if(block[l] == ' ') {
+                buf[m++] = 0;
+                lineSplit[j++] = p;
+                p = &buf[m];
+            }else {
+                buf[m++] = block[l];
+            }
+        }
+    }
+    exit(0);
+}
+
+```
+
+
+
 ### Lec2 C & GDB
 
 ------
 
+#### 2.1 
 
 
 
+
+
+#### 2.2 Lab
+
+##### Systemcall
+
+> In this assignment you will add a system call tracing feature that may help you when debugging later labs. You'll create a new trace system call that will control tracing. It should take one argument, an integer "mask", whose bits specify which system calls to trace. For example, to trace the fork system call, a program calls trace(1 << SYS_fork), where SYS_fork is a syscall number from kernel/syscall.h. You have to modify the xv6 kernel to print out a line when each system call is about to return, if the system call's number is set in the mask. The line should contain the process id, the name of the system call and the return value; you don't need to print the system call arguments. The trace system call should enable tracing for the process that calls it and any children that it subsequently forks, but should not affect other processes. 
+>
+
+实验前准备：
+
+Before you start coding, read Chapter 2 of the [xv6 book](https://pdos.csail.mit.edu/6.828/2020/xv6/book-riscv-rev1.pdf), and Sections 4.3 and 4.4 of Chapter 4, and related source files:
+
+- The user-space code for systems calls is in `user/user.h` and `user/usys.pl`.
+- The kernel-space code is `kernel/syscall.h`, kernel/syscall.c.
+- The process-related code is `kernel/proc.h` and `kernel/proc.c`.
+
+实验目的，增加一个trace系统调用，可以用来跟踪某个系统调用被执行的情况
+
+We provide a `trace` user-level program that runs another program with tracing enabled (see `user/trace.c`). When you're done, you should see output like this:
+
+```
+$ trace 32 grep hello README
+3: syscall read -> 1023
+3: syscall read -> 966
+3: syscall read -> 70
+3: syscall read -> 0
+$
+$ trace 2147483647 grep hello README
+4: syscall trace -> 0
+4: syscall exec -> 3
+4: syscall open -> 3
+4: syscall read -> 1023
+4: syscall read -> 966
+4: syscall read -> 70
+4: syscall read -> 0
+4: syscall close -> 0
+$
+$ grep hello README
+$
+$ trace 2 usertests forkforkfork
+usertests starting
+test forkforkfork: 407: syscall fork -> 408
+408: syscall fork -> 409
+409: syscall fork -> 410
+410: syscall fork -> 411
+409: syscall fork -> 412
+410: syscall fork -> 413
+409: syscall fork -> 414
+411: syscall fork -> 415
+...
+$   
+```
+
+In the first example above, trace invokes grep tracing just the read system call. The 32 is `1<<SYS_read`. In the second example, trace runs grep while tracing all system calls; the 2147583647 has all 31 low bits set. In the third example, the program isn't traced, so no trace output is printed. In the fourth example, the fork system calls of all the descendants of the `forkforkfork` test in `usertests` are being traced. Your solution is correct if your program behaves as shown above (though the process IDs may be different).
+
+一些提示
+
+Some hints:
+
+- Add `$U/_trace` to UPROGS in Makefile
+- Run make qemu and you will see that the compiler cannot compile `user/trace.c`, because the user-space stubs for the system call don't exist yet: add a prototype for the system call to `user/user.h`, a stub to `user/usys.pl`, and a syscall number to `kernel/syscall.h`. The Makefile invokes the perl script `user/usys.pl`, which produces `user/usys.S`, the actual system call stubs, which use the RISC-V `ecall` instruction to transition to the kernel. Once you fix the compilation issues, run trace 32 grep hello README; it will fail because you haven't implemented the system call in the kernel yet.
+- Add a `sys_trace()` function in `kernel/sysproc.c` that implements the new system call by remembering its argument in a new variable in the `proc` structure (see `kernel/proc.h`). The functions to retrieve system call arguments from user space are in `kernel/syscall.c`, and you can see examples of their use in `kernel/sysproc.c`.
+- Modify `fork()` (see `kernel/proc.c`) to copy the trace mask from the parent to the child process.
+- Modify the `syscall()` function in `kernel/syscall.c` to print the trace output. You will need to add an array of syscall names to index into.
 
 ### Lec3 OS组织和系统调用
 
