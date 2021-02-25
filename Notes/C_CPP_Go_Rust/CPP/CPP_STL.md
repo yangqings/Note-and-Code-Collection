@@ -1,4 +1,4 @@
-# CPP_STL
+## CPP_STL
 
 自 1998 年 ANSI/ISO [C++](http://c.biancheng.net/cplus/) 标准正式定案，C++ [STL](http://c.biancheng.net/stl/) 规范版本正式通过以后，由于其实开源的，各个 C++ 编译器厂商在此标准的基础上，实现了满足自己需求的 C++ STL 泛型库，主要包括 HP STL、SGI STL、STLport、PJ STL、Rouge Wave STL 等。
 
@@ -8,38 +8,59 @@
   -  vector 向量容器、
   - list 列表容器、
   - deque 双端队列容器、
-- 排序容器（关联容器）：默认小到大排序，会按序插入
-  - set 集合容器、
-  - multiset多重集合容器、
-  - map映射容器、
-  - multimap 多重映射容器、
-- 哈希容器（关联容器，C++11）：元素位置未排列
+- 排序容器（关联容器）：默认小到大排序，会按序插入（底层数据结构是红黑树）
+  - set 集合容器
+  - multiset多重集合容器，允许重复元素
+  - map映射容器
+  - multimap 多重映射容器，允许重复元素
+- 哈希容器（关联容器，C++11）：元素位置未排列（底层数据结构是哈希表）
   - unordered_set 哈希集合、
   - unordered_multiset 哈希多重集合、
   - unordered_map 哈希映射、
   - unordered_multimap 哈希多重映射、
 
-## 1.序列式容器
+### Containers
 
+The STL contains sequence [containers](https://en.wikipedia.org/wiki/Container_(data_structure)) and associative containers. The containers are objects that store data. The standard [sequence containers](https://en.wikipedia.org/wiki/List_(computing)) include `vector`, `deque`, and `list`. The standard [associative containers](https://en.wikipedia.org/wiki/Associative_array) are `set`, `multiset`, `map`, `multimap`, `hash_set`, `hash_map`, `hash_multiset` and `hash_multimap`. There are also *container adaptors* `queue`, `priority_queue`, and `stack`, that are containers with specific interface, using other containers as implementation.
 
+|                          Container                           |                         Description                          |
+| :----------------------------------------------------------: | :----------------------------------------------------------: |
+|                      Simple containers                       |                                                              |
+|                             pair                             | The pair container is a simple associative container consisting of a 2-[tuple](https://en.wikipedia.org/wiki/Tuple) of data elements or objects, called 'first' and 'second', in that fixed order. The STL 'pair' can be assigned, copied and compared. The array of objects allocated in a map or hash_map (described below) are of type 'pair' by default, where all the 'first' elements act as the unique keys, each associated with their 'second' value objects. |
+| [Sequences](https://en.wikipedia.org/wiki/List_(computing)) (arrays/[linked lists](https://en.wikipedia.org/wiki/Linked_list)): ordered collections |                                                              |
+|     [vector](https://en.wikipedia.org/wiki/Vector_(STL))     | a [dynamic array](https://en.wikipedia.org/wiki/Dynamic_array), like [C](https://en.wikipedia.org/wiki/C_(programming_language)) array (i.e., capable of [random access](https://en.wikipedia.org/wiki/Random_access)) with the ability to resize itself automatically when inserting or erasing an object. Inserting an element to the back of the vector at the end takes [amortized constant time](https://en.wikipedia.org/wiki/Amortized_constant_time). Removing the last element takes only constant time, because no resizing happens. Inserting and erasing at the beginning or in the middle is linear in time.A specialization for type [bool](https://en.wikipedia.org/wiki/Boolean_data_type) exists, which optimizes for space by storing [bool](https://en.wikipedia.org/wiki/Boolean_data_type) values as bits. |
+|                             list                             | a [doubly linked list](https://en.wikipedia.org/wiki/Doubly_linked_list); elements are not stored in contiguous memory. Opposite performance from a vector. Slow lookup and access (linear time), but once a position has been found, quick insertion and deletion (constant time). |
+|                            slist                             | a [singly linked list](https://en.wikipedia.org/wiki/Linked_list); elements are not stored in contiguous memory. Opposite performance from a vector. Slow lookup and access (linear time), but once a position has been found, quick insertion and deletion (constant time). It has slightly more efficient insertion and deletion, and uses less memory than a doubly linked list, but can only be iterated forwards. It is implemented in the C++ standard library as `forward_list`. |
+| [deque](https://en.wikipedia.org/wiki/Deque) **(\*double-ended [queue](https://en.wikipedia.org/wiki/Queue_(data_structure))\*)** | a vector with insertion/erase at the beginning or end in [amortized constant time](https://en.wikipedia.org/wiki/Amortized_constant_time), however lacking some guarantees on iterator validity after altering the deque. |
+|                      Container adaptors                      |                                                              |
+| [queue](https://en.wikipedia.org/wiki/Queue_(data_structure)) | Provides [FIFO](https://en.wikipedia.org/wiki/FIFO_(computing_and_electronics)) [queue](https://en.wikipedia.org/wiki/Queue_(data_structure)) interface in terms of `push`/`pop`/`front`/`back` operations.Any sequence supporting operations `front()`, `back()`, `push_back()`, and `pop_front()` can be used to instantiate queue (e.g. `list` and `deque`). |
+| [priority queue](https://en.wikipedia.org/wiki/Priority_queue) | Provides [priority queue](https://en.wikipedia.org/wiki/Priority_queue) interface in terms of `push/pop/top` operations (the element with the highest priority is on top).Any [random-access](https://en.wikipedia.org/wiki/Random-access) sequence supporting operations `front()`, `push_back()`, and `pop_back()` can be used to instantiate priority_queue (e.g. `vector` and `deque`). It is implemented using a [heap](https://en.wikipedia.org/wiki/Heap_(data_structure)).Elements should additionally support comparison (to determine which element has a higher priority and should be popped first). |
+| [stack](https://en.wikipedia.org/wiki/Stack_(data_structure)) | Provides [LIFO](https://en.wikipedia.org/wiki/LIFO_(computing)) [stack](https://en.wikipedia.org/wiki/Stack_(data_structure)) interface in terms of `push/pop/top` operations (the last-inserted element is on top).Any sequence supporting operations `back()`, `push_back()`, and `pop_back()` can be used to instantiate stack (e.g. `vector`, `list`, and `deque`). |
+| [Associative containers](https://en.wikipedia.org/wiki/Associative_array): unordered collections |                                                              |
+| [set](https://en.wikipedia.org/wiki/Set_(computer_science))  | a mathematical [set](https://en.wikipedia.org/wiki/Set_(computer_science)); inserting/erasing elements in a set does not invalidate iterators pointing in the set. Provides set operations [union](https://en.wikipedia.org/wiki/Union_(set_theory)), [intersection](https://en.wikipedia.org/wiki/Intersection_(set_theory)), [difference](https://en.wikipedia.org/wiki/Set_difference), [symmetric difference](https://en.wikipedia.org/wiki/Symmetric_difference) and test of inclusion. Type of data must implement comparison operator `<` or custom comparator function must be specified; such comparison operator or comparator function must guarantee [strict weak ordering](https://en.wikipedia.org/wiki/Strict_weak_ordering), otherwise behavior is undefined. Typically implemented using a [self-balancing binary search tree](https://en.wikipedia.org/wiki/Self-balancing_binary_search_tree). |
+|                           multiset                           | same as a set, but allows duplicate elements (mathematical [multiset](https://en.wikipedia.org/wiki/Multiset)). |
+|      [map](https://en.wikipedia.org/wiki/Map_(C%2B%2B))      | an [associative array](https://en.wikipedia.org/wiki/Associative_array); allows mapping from one data item (a key) to another (a value). Type of key must implement comparison operator `<` or custom comparator function must be specified; such comparison operator or comparator function must guarantee [strict weak ordering](https://en.wikipedia.org/wiki/Strict_weak_ordering), otherwise behavior is undefined. Typically implemented using a self-balancing binary search tree. |
+|                           multimap                           |          same as a map, but allows duplicate keys.           |
+| hash_set hash_multiset [hash_map](https://en.wikipedia.org/wiki/Hash_map_(C%2B%2B)) hash_multimap | similar to a set, multiset, map, or multimap, respectively, but implemented using a [hash table](https://en.wikipedia.org/wiki/Hash_table); keys are not ordered, but a [hash function](https://en.wikipedia.org/wiki/Hash_function) must exist for the key type. These types were left out of the C++ standard; similar containers were standardized in [C++11](https://en.wikipedia.org/wiki/C%2B%2B11), but with different names (`unordered_set` and `unordered_map`). |
+|                  Other types of containers                   |                                                              |
+|                            bitset                            | stores series of bits similar to a fixed-sized vector of bools. Implements bitwise operations and lacks iterators. Not a sequence. Provides random access. |
+|                           valarray                           | Another array data type, intended for numerical use (especially to represent [vectors](https://en.wikipedia.org/wiki/Vector_(mathematics)) and [matrices](https://en.wikipedia.org/wiki/Matrix_(mathematics))); the C++ standard allows specific optimizations for this intended purpose. According to Josuttis, valarray was badly designed, by people "who left the [C++ standard] committee a long time before the standard was finished", and [expression template](https://en.wikipedia.org/wiki/Expression_templates) libraries are to be preferred.[[3\]](https://en.wikipedia.org/wiki/Standard_Template_Library#cite_note-3) A proposed rewrite of the valarray part of the standard in this vein was rejected, instead becoming a permission to implement it using expression template.[[4\]](https://en.wikipedia.org/wiki/Standard_Template_Library#cite_note-4) |
 
-## 2.关联式容器
+### Iterators
 
+The STL implements five different types of [iterators](https://en.wikipedia.org/wiki/Iterator). These are *input iterators* (that can only be used to read a sequence of values), *output iterators* (that can only be used to write a sequence of values), *forward iterators* (that can be read, written to, and move forward), *bidirectional iterators* (that are like forward iterators, but can also move backwards) and *random access iterators* (that can move freely any number of steps in one operation).
 
+A fundamental STL concept is a *range* which is a pair of iterators that designate the beginning and end of the computation, and most of the library's algorithmic templates that operate on data structures have interfaces that use ranges.[[5\]](https://en.wikipedia.org/wiki/Standard_Template_Library#cite_note-5)
 
-## 3.无序关联式容器
+It is possible to have bidirectional iterators act like random access iterators, so moving forward ten steps could be done by simply moving forward a step at a time a total of ten times. However, having distinct random access iterators offers efficiency advantages. For example, a vector would have a random access iterator, but a list only a bidirectional iterator.
 
+Iterators are the major feature that allow the generality of the STL. For example, an algorithm to reverse a sequence can be implemented using bidirectional iterators, and then the same implementation can be used on lists, vectors and [deques](https://en.wikipedia.org/wiki/Deque). User-created [containers](https://en.wikipedia.org/wiki/Container_(data_structure)) only have to provide an iterator that implements one of the five standard iterator interfaces, and all the algorithms provided in the STL can be used on the container.
 
+This generality also comes at a price at times. For example, performing a search on an [associative container](https://en.wikipedia.org/wiki/Associative_container) such as a map or set can be much slower using iterators than by calling member functions offered by the container itself. This is because an associative container's methods can take advantage of knowledge of the internal structure, which is opaque to algorithms using iterators.
 
-## 4.容器适配器
+### Algorithms
 
-
-
-## 5.迭代适配器
-
-
-
-## 6.常用算法
+A large number of algorithms to perform activities such as searching and sorting are provided in the STL, each implemented to require a certain level of iterator (and therefore will work on any container that provides an interface by iterators). Searching algorithms like `binary_search` and `lower_bound` use [binary search](https://en.wikipedia.org/wiki/Binary_search_algorithm) and like sorting algorithms require that the type of data must implement comparison operator `<` or custom comparator function must be specified; such comparison operator or comparator function must guarantee [strict weak ordering](https://en.wikipedia.org/wiki/Strict_weak_ordering). Apart from these, algorithms are provided for making heap from a range of elements, generating lexicographically ordered permutations of a range of elements, merge sorted ranges and perform [union](https://en.wikipedia.org/wiki/Union_(set_theory)), [intersection](https://en.wikipedia.org/wiki/Intersection_(set_theory)), [difference](https://en.wikipedia.org/wiki/Set_difference) of sorted ranges.
 
 
 
