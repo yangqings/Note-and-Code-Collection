@@ -550,7 +550,87 @@ Some hints:
 
 ------
 
+#### Abstracting physical resources
 
+- 对物硬件资源进行抽象，方便用户使用
+- 隔离硬件资源，保护内核，进程间也实现隔离
+
+#### 用户模式，特权模式，和系统调用
+
+> RISC-V has three modes in which the CPU can execute instructions: **machine mode, supervisor mode, and user mode**  
+>
+> In supervisor mode the CPU is allowed to execute privileged instructions: for example, enabling and disabling interrupts, reading and writing the register that holds the address of a page table, etc.  
+>
+> The software running in kernel space (or in supervisor mode) is called the kernel.
+
+- 系统调用是用户代码与内核交互的接口（内核通过系统调用的方式对外提供服务）
+
+#### 内核组织
+
+操作系统的哪部分应该运行在supervisor mode？
+
+- 所有系统调用都运行在supervisor mode：monolithic kernel 宏内核
+  - 优：方便管理权限（不用区分）
+  - 优：os的不同部分更容易协作
+  - 缺：os复杂，开发容易出错，且错误致命
+- 尽可能少的os代码运行在supervisor mode：microkernel 微内核
+  - 优：kerlnel简单
+  - 缺：不同的servcie之间通信代价大，难以实现高性能
+
+#### xv6组织结构
+
+<div align=center>
+    <img src="pic/MIT/xv6kernel.png" width="60%"/>
+</div>
+
+<div align=center>
+    <img src="pic/MIT/address space.png" width="60%"/>
+</div>
+
+限制process的地址空间的因素有哪些？
+
+- RISC-V是64bit位宽，只使用了38或39bits，2^38 - 1 = 0x3f ffff ffff
+- 地址空间顶部是tramponline和trapframe
+
+
+
+> A process can make a system call by executing the RISC-V ecall instruction. This instruction raises the hardware privilege level and changes the program counter to a kernel-defined entry point.
+
+- kernel/proc.h 
+
+
+
+#### Code：starting xv6 and the first process
+
+- kernel/entry.S：bootloader（以只读模式保存在内存）以machine mode加载内核代码，执行 _entry，xv6从这里开始启动
+- loaders加载xv6内核代码到物理地址0x8000 0000
+  - 为什么不是从0x0地址开始？
+  - 因为0x0 : 0x8000 0000包含了I/O设备 
+- _entry函数设置stack，xv6开始执行C代码
+
+> The instructions at `_entry` set up a stack so that xv6 can run C code. Xv6 declares space for an initial stack, stack0, in the file start.c (kernel/start.c:11). The code at _entry loads the stack pointer register sp with the address stack0+4096, the top of the stack, because the stack on RISC-V grows down. Now that the kernel has a stack,       _entry calls into C code at start (kernel/start.c:21)
+
+- RISC-V的mret指令：进入supervisor mode
+
+- start函数：
+  - 执行一些只在machine mode下才允许的操作configuration
+
+> The function `start` performs some configuration that is only allowed in machine mode, and then switches to supervisor mode. To enter supervisor mode, RISC-V provides the instruction mret. This instruction is most often used to return from a previous call from supervisor mode to machine mode. start isn’t returning from such a call, and instead sets things up as if there had been one: it sets the previous privilege mode to supervisor in the register mstatus, it sets the return address to main by writing main’s address into the register mepc, disables virtual address translation in supervisor mode by writing 0 into the page-table register satp, and delegates all interrupts and exceptions to supervisor mode.
+>
+> Before jumping into supervisor mode, start performs one more task: it programs the clock chip to generate timer interrupts. With this housekeeping out of the way, start “returns” to supervisor mode by calling mret. This causes the program counter to change to main (kernel/main.c:11)  
+
+- main
+  - 初始化外设、子系统，创建第一个进程userinit ( kernel/proc.c )
+  - userinit调用系统调用exec，启动init进程，创建文件描述符0，1，2，启动shell进程
+
+> After main (kernel/main.c:11) initializes several devices and subsystems, it creates the first process by calling userinit (kernel/proc.c:212). The first process executes a small program written in RISC-V assembly, initcode.S (user/initcode.S:1), which re-enters the kernel by invoking the exec system call. As we saw in Chapter 1, exec replaces the memory and registers of the current process with a new program (in this case, /init). Once the kernel has completed exec, it returns to user space in the /init process. Init (user/init.c:15) creates a new console device file if needed and then opens it as file descriptors 0, 1, and 2. Then it starts a shell on the console. The system is up.
+
+#### Real World
+
+- 宏内核：Linux（许多Unix-like OS也是）
+- 微内核：L4，Minix，QNX，（以微内核+servers方式，嵌入式领域居多）
+
+> Most operating systems have adopted the process concept, and most processes look similar to xv6’s. Modern operating systems, however, support several threads within a process, to allow a single process to exploit multiple CPUs. Supporting multiple threads in a process involves quite a bit of machinery that xv6 doesn’t have, including potential interface changes (e.g., Linux’s clone, a variant of fork), to control which aspects of a process threads share.  
 
 
 
