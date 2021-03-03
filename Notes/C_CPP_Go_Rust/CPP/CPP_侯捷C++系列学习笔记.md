@@ -1322,15 +1322,13 @@ GP 数据与方法分离，标准库采用的是GP（Generic Programming）
 
 allocator ---> operator new delete ---> malloc freee ---> 操作系统底层接口
 
-GNU C的allocator
+GNU C的allocator，为什么需要allocator？
 
+- malloc实际分配的内存比需要的内存要大（有开销），head cookie、tail cookie、padding等
+- malloc分配小内存，相对开销大，每个小内存都有额外开销，malloc分配大内存相对开销小
+- allocator分配连续的大内存空间供容器使用，省掉不必要的cookie等额外开销
 
-
-
-
-
-
-
+查看源码MSVC，GUN GCC，LLVM等
 
 ## 五 C++11新特性
 
