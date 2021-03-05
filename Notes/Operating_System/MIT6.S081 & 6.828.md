@@ -75,6 +75,8 @@ $ cd ..
 
 编译过程有缺失依赖再另外google解决。
 
+RSIC-V工具链安装[教程](https://www.cnblogs.com/zhayujie/p/12970935.html)
+
 - step3 进入Lab code文件夹编译并启动xv6系统
 
 ```shell
@@ -86,6 +88,16 @@ $
 ```
 
 To quit qemu type: `Ctrl-a x`
+
+- 使用gdb调试xv6系统
+
+make qemu-gdb
+
+打开新的终端，进入相同目录，
+
+执行 rsicv64-unknown-eif-gdb，
+
+执行target remote : 端口号
 
 ##### 实现一个sleep程序
 
@@ -476,17 +488,11 @@ int main(int argc, char *argv[]){
 
 ------
 
-#### 2.1 
-
-
-
-
-
-#### 2.2 Lab
+#### 2.1 Lab
 
 ##### Systemcall
 
-> In this assignment you will add a system call tracing feature that may help you when debugging later labs. You'll create a new trace system call that will control tracing. It should take one argument, an integer "mask", whose bits specify which system calls to trace. For example, to trace the fork system call, a program calls trace(1 << SYS_fork), where SYS_fork is a syscall number from kernel/syscall.h. You have to modify the xv6 kernel to print out a line when each system call is about to return, if the system call's number is set in the mask. The line should contain the process id, the name of the system call and the return value; you don't need to print the system call arguments. The trace system call should enable tracing for the process that calls it and any children that it subsequently forks, but should not affect other processes. 
+> In this assignment you will add a system call tracing feature that may help you when debugging later labs. You'll create a new trace system call that will control tracing. It should take one argument, an integer "mask", whose bits specify which system calls to trace. For example, to trace the fork system call, a program calls trace(1 << SYS_fork), where SYS_fork is a syscall number from `kernel/syscall.h`. You have to modify the xv6 kernel to print out a line when each system call is about to return, if the system call's number is set in the mask. The line should contain the process id, the name of the system call and the return value; you don't need to print the system call arguments. The trace system call should enable tracing for the process that calls it and any children that it subsequently forks, but should not affect other processes. 
 >
 
 实验前准备：
@@ -497,7 +503,14 @@ Before you start coding, read Chapter 2 of the [xv6 book](https://pdos.csail.mit
 - The kernel-space code is `kernel/syscall.h`, kernel/syscall.c.
 - The process-related code is `kernel/proc.h` and `kernel/proc.c`.
 
-实验目的，增加一个trace系统调用，可以用来跟踪某个系统调用被执行的情况
+实验目的，增加一个trace系统调用，可以用来跟踪某个系统调用被执行的情况，此函数入参为一个数字，可以控制跟踪哪些system call。
+
+- trace(1<<SYS_fork)，trace(10b)，
+- trace(2)表示跟踪fork调用；trace(1<<SYS_read)，
+- trace(10 0000b)，trace(32)，表示跟踪read调用；
+- trace(10 0010b)，trace(34)，表示跟踪fork、read调用；
+- 达到的效果：trace 32 grep hello README，表示执行grep hello README时，read system call调用时，进行打印
+  
 
 We provide a `trace` user-level program that runs another program with tracing enabled (see `user/trace.c`). When you're done, you should see output like this:
 
@@ -545,6 +558,16 @@ Some hints:
 - Add a `sys_trace()` function in `kernel/sysproc.c` that implements the new system call by remembering its argument in a new variable in the `proc` structure (see `kernel/proc.h`). The functions to retrieve system call arguments from user space are in `kernel/syscall.c`, and you can see examples of their use in `kernel/sysproc.c`.
 - Modify `fork()` (see `kernel/proc.c`) to copy the trace mask from the parent to the child process.
 - Modify the `syscall()` function in `kernel/syscall.c` to print the trace output. You will need to add an array of syscall names to index into.
+
+具体实现：
+
+- 在kernel/syscall.h中宏定义 #define SYS_trace 22
+- 修改user/usys.pl中新增一个entry
+- 在user/user.h中新增trace函数声明
+
+
+
+
 
 ### Lec3 OS组织和系统调用
 
