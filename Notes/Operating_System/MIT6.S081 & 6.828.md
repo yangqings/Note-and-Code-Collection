@@ -1,6 +1,6 @@
+# MIT6.S081 & 6.828
 
-
-## MIT6.S081 & 6.828
+[TOC]
 
 ### Lec1 介绍
 
@@ -40,21 +40,30 @@ $ cd xv6-labs-2020
 $ git checkout util
 ```
 
-- step2 [安装tools](https://pdos.csail.mit.edu/6.828/2020/tools.html)
+- step2 [安装toolchain](https://pdos.csail.mit.edu/6.828/2020/tools.html)
+
+下载riscv-toolchain源码
 
 ```shell
-sudo apt-get install git build-essential gdb-multiarch qemu-system-misc gcc-riscv64-linux-gnu binutils-riscv64-linux-gnu 
+git clone --recursive https://github.com/riscv/riscv-gnu-toolchain
 ```
 
-`注意`交叉编译器的版本：ubuntu默认的gcc-7-riscv64-linux-gnu不支持-mno-relax选项，需要卸载gcc-7-riscv64-linux-gnu并安装gcc-8-riscv64-linux-gnu；然后创建链接/usr/bin/riscv64-linux-gnu-gcc指向/usr/bin/riscv64-linux-gnu-gcc-8
+安装编译依赖
 
-```shell
-$ sudo apt-get install gcc-8-riscv64-linux-gnu
+```bash
+sudo apt-get install autoconf automake autotools-dev curl libmpc-dev libmpfr-dev libgmp-dev gawk build-essential bison flex texinfo gperf libtool patchutils bc zlib1g-dev libexpat-dev
 ```
 
-```shell
-$ update-alternatives --install /usr/bin/riscv64-linux-gnu-gcc riscv64-linux-gnu-gcc /usr/bin/riscv64-linux-gnu-gcc-8 1
+配置并编译 Configure and build the toolchain:
+
+```bash
+$ cd riscv-gnu-toolchain
+$ ./configure --prefix=/usr/local
+$ sudo make
+$ cd ..
 ```
+
+
 
 `注意` ubuntu apt安装的qemu版本太老，缺失qemu-system-riscv64
 
@@ -488,20 +497,95 @@ int main(int argc, char *argv[]){
 
 ------
 
-#### 2.1 Lab
-
-##### Systemcall
+#### 2.1 Lab Systemcall
 
 > In this assignment you will add a system call tracing feature that may help you when debugging later labs. You'll create a new trace system call that will control tracing. It should take one argument, an integer "mask", whose bits specify which system calls to trace. For example, to trace the fork system call, a program calls trace(1 << SYS_fork), where SYS_fork is a syscall number from `kernel/syscall.h`. You have to modify the xv6 kernel to print out a line when each system call is about to return, if the system call's number is set in the mask. The line should contain the process id, the name of the system call and the return value; you don't need to print the system call arguments. The trace system call should enable tracing for the process that calls it and any children that it subsequently forks, but should not affect other processes. 
 >
 
-实验前准备：
+##### 实验前准备：
 
 Before you start coding, read Chapter 2 of the [xv6 book](https://pdos.csail.mit.edu/6.828/2020/xv6/book-riscv-rev1.pdf), and Sections 4.3 and 4.4 of Chapter 4, and related source files:
 
 - The user-space code for systems calls is in `user/user.h` and `user/usys.pl`.
 - The kernel-space code is `kernel/syscall.h`, kernel/syscall.c.
 - The process-related code is `kernel/proc.h` and `kernel/proc.c`.
+
+##### xv6 Chapter4的4.3 Code: Calling system calls
+
+系统调用被调用的流程，以`initcode.S`调用`exec`为例子，system call的调用链路：
+
+- user code通过a0和a1寄存器传递参数给exce，将系统调用号存在a7寄存器
+- 系统调用号和`syscalls`数组队对应（函数指针数组，存放真正的系统调用函数入口），在`kernel/syscall.c`
+- ecall指令是一个特殊的指令，进入到内核，依次执行uservec, usertrap, sysycall
+- syscall从寄存器 a7 获取系统调用号，
+
+> syscall (kernel/syscall.c:133) retrieves the system call number from the saved a7 in the trapframe and uses it to index into syscalls. For the first system call, a7 contains SYS_exec (kernel/syscall.h:8), resulting in a call to the system call implementation function sys_exec.
+>
+>  When the system call implementation function returns, syscall records its return value in p->trapframe->a0. This will cause the original user-space call to exec() to return that value, since the C calling convention on RISC-V places return values in a0. System calls conventionally return negative numbers to indicate errors, and zero or positive numbers for success. If the system call number is invalid, syscall prints an error and returns -1.  
+
+当系统调用实现函数返回时，syscall将其返回值记录在p->trapframe->a0中。这将导致对 exec() 的原始用户空间调用返回该值，因为RISC-V上的C调用约定将返回值放在a0中。系统调用通常返回负数表示错误，零或正数表示成功。如果系统调用号无效，syscall将打印一个错误并返回−1。
+
+```c
+//函数指针数组
+//(*sysycall)表示是一个指针
+//[] 表示是一个数组，数组指针
+//(void) 表示参数是void的函数
+//uint64 表示函数的返回值是uint64
+static uint64 (*syscalls[])(void) = {
+[SYS_fork]    sys_fork,
+[SYS_exit]    sys_exit,
+[SYS_wait]    sys_wait,
+[SYS_pipe]    sys_pipe,
+[SYS_read]    sys_read,
+[SYS_kill]    sys_kill,
+[SYS_exec]    sys_exec,
+[SYS_fstat]   sys_fstat,
+[SYS_chdir]   sys_chdir,
+[SYS_dup]     sys_dup,
+[SYS_getpid]  sys_getpid,
+[SYS_sbrk]    sys_sbrk,
+[SYS_sleep]   sys_sleep,
+[SYS_uptime]  sys_uptime,
+[SYS_open]    sys_open,
+[SYS_write]   sys_write,
+[SYS_mknod]   sys_mknod,
+[SYS_unlink]  sys_unlink,
+[SYS_link]    sys_link,
+[SYS_mkdir]   sys_mkdir,
+[SYS_close]   sys_close,
+[SYS_trace]   sys_trace,
+};
+```
+
+
+
+```c
+void
+syscall(void)
+{
+  int num;
+  struct proc *p = myproc();
+
+  num = p->trapframe->a7;              //获得系统调用号
+  if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
+    p->trapframe->a0 = syscalls[num]();//获得系统调用函数的地址，加载到a0寄存器
+  } else {
+    printf("%d %s: unknown sys call %d\n",
+            p->pid, p->name, num);
+    p->trapframe->a0 = -1;
+  }
+}
+```
+
+
+
+##### xv6 Chapter4的4.4 Code: System call arguments
+
+
+
+
+
+##### 实验提示
 
 实验目的，增加一个trace系统调用，可以用来跟踪某个系统调用被执行的情况，此函数入参为一个数字，可以控制跟踪哪些system call。
 
@@ -559,11 +643,13 @@ Some hints:
 - Modify `fork()` (see `kernel/proc.c`) to copy the trace mask from the parent to the child process.
 - Modify the `syscall()` function in `kernel/syscall.c` to print the trace output. You will need to add an array of syscall names to index into.
 
-具体实现：
+##### 具体实现
 
 - 在kernel/syscall.h中宏定义 #define SYS_trace 22
 - 修改user/usys.pl中新增一个entry
 - 在user/user.h中新增trace函数声明
+
+
 
 
 
