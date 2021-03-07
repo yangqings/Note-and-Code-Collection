@@ -63,7 +63,15 @@ $ sudo make
 $ cd ..
 ```
 
+更新环境变量
 
+Ubuntu环境配置文件是`~/.bashrc`，在最后一行添加：
+
+```bash
+export PATH="$PATH:/usr/local/opt/riscv-gnu-toolchain/bin"
+```
+
+此时在命令行输入`riscv64-unknown-elf-gcc -v`，如果能显示版本信息则代表安装成功。
 
 `注意` ubuntu apt安装的qemu版本太老，缺失qemu-system-riscv64
 
@@ -576,6 +584,10 @@ syscall(void)
   }
 }
 ```
+
+
+
+Makefile调用`usys.pl（perl脚本）`生成`usys.S`，里面写了具体实现，通过ecall进入kernel，通过设置寄存器a7的值，表明调用哪个system call
 
 
 
