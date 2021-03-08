@@ -7,14 +7,16 @@ Linux实现的是：链路层（网卡驱动）、网络层（内核协议栈）
 ### 1. Linux收包过程总览
 
 <div align=center>
-<img src="./pic/Linux network 1.png" width=70% />
+<img src="./image/Linux network 1.png" width=70% />
 </div>
+
 
  内核和网络设备驱动是通过中断的方式来处理的。当设备上有数据到达的时候，会给CPU的相关引脚上触发一个电压变化，以通知CPU来处理数据。对于网络模块来说，由于处理过程比较复杂和耗时，如果在中断函数中完成所有的处理，将会导致中断处理函数（优先级过高）将过度占据CPU，将导致CPU无法响应其它设备，例如鼠标和键盘的消息。因此Linux中断处理函数是分上半部和下半部的。上半部是只进行最简单的工作，快速处理然后释放CPU，接着CPU就可以允许其它中断进来。剩下将绝大部分的工作都放到下半部中，可以慢慢从容处理。2.4以后的内核版本采用的下半部实现方式是软中断，由**ksoftirqd内核线程**全权处理。和硬中断不同的是，硬中断是通过给CPU物理引脚施加电压变化，而**软中断是通过给内存中的一个变量的二进制值以通知软中断处理程序**。
 
 <div align=center>
-<img src="./pic/Linux network 2.png" width=100% />
+<img src="./image/Linux network 2.png" width=100% />
 </div>
+
 
 当网卡上收到数据以后，Linux中第一个工作的模块是网络驱动。网络驱动会以**DMA的方式把网卡上收到的帧写到内存里**。再向CPU发起一个中断，以通知CPU有数据到达。第二，当CPU收到中断请求后，会去调用网络驱动注册的中断处理函数。网卡的中断处理函数并不做过多工作，发出软中断请求，然后尽快释放CPU。ksoftirqd检测到有软中断请求到达，调用**poll开始轮询收包**，收到后交由各级协议栈处理。对于UDP包来说，会被放到用户socket的接收队列中。
 
@@ -29,14 +31,15 @@ Linux实现的是：链路层（网卡驱动）、网络层（内核协议栈）
 - 协议栈注册
 
   <div align=center>
-  <img src="./pic/Linux network 3.png" width=100% />
+  <img src="./image/Linux network 3.png" width=100% />
   </div>
 
 - 网卡驱动初始化
 
   <div align=center>
-  <img src="./pic/Linux network 4.png" width=100% />
+  <img src="./image/Linux network 4.png" width=100% />
   </div>
+
 
   网卡驱动实现了ethtool所需要的接口，也在这里注册完成函数地址的注册。当 ethtool 发起一个系统调用之后，内核会找到对应操作的回调函数。
 
@@ -49,7 +52,7 @@ Linux实现的是：链路层（网卡驱动）、网络层（内核协议栈）
   当启用一个网卡时（例如，通过 ifconfig eth0 up），net_device_ops 中的 igb_open方法会被调用。它通常会做以下事情：
 
   <div align=center>
-  <img src="./pic/Linux network 5.png" width=100% />
+  <img src="./image/Linux network 5.png" width=100% />
   </div>
 
 ### 3.接收数据
@@ -59,8 +62,9 @@ Linux实现的是：链路层（网卡驱动）、网络层（内核协议栈）
   首先当数据帧从网线到达网卡上的时候，第一站是网卡的接收队列。网卡在分配给自己的RingBuffer中寻找可用的内存位置，找到后DMA引擎会把数据DMA到网卡之前关联的内存里，这个时候CPU都是无感的。当DMA操作完成以后，网卡会像CPU发起一个硬中断，通知CPU有数据到达。
 
   <div align=center>
-  <img src="./pic/Linux network 6.png" width=100% />
+  <img src="./image/Linux network 6.png" width=100% />
   </div>
+
 
   注意：当RingBuffer满的时候，新来的数据包将给丢弃。ifconfig查看网卡的时候，可以里面有个overruns，表示因为环形队列满被丢弃的包。如果发现有丢包，可能需要通过ethtool命令来加大环形队列的长度
 
