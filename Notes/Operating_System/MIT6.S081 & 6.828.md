@@ -2,6 +2,14 @@
 
 [TOC]
 
+### 学习资料
+
+------
+
+- 课程主页：[click here](https://pdos.csail.mit.edu/6.828/2020/overview.html)
+- B站视频 ：[click here](https://www.bilibili.com/video/BV1Dy4y1m7ZE?from=search&seid=5650197930812421215)
+- 课程翻译：[click here](https://mit-public-courses-cn-translatio.gitbook.io/mit6-s081/)
+
 ### Lec1 介绍
 
 ------
@@ -663,7 +671,7 @@ Some hints:
 
 
 
-
+#### 2.2 Lab
 
 
 
@@ -671,12 +679,12 @@ Some hints:
 
 ------
 
-#### Abstracting physical resources
+#### 3.1 Abstracting physical resources
 
 - 对物硬件资源进行抽象，方便用户使用
 - 隔离硬件资源，保护内核，进程间也实现隔离
 
-#### 用户模式，特权模式，和系统调用
+#### 3.2 用户模式，特权模式，和系统调用
 
 > RISC-V has three modes in which the CPU can execute instructions: **machine mode, supervisor mode, and user mode**  
 >
@@ -686,7 +694,19 @@ Some hints:
 
 - 系统调用是用户代码与内核交互的接口（内核通过系统调用的方式对外提供服务）
 
-#### 内核组织
+
+
+用户代码如何通过系统调用进入内核？
+
+> 在RISC-V中，有一个专门的指令用来实现这个功能，叫做ECALL。ECALL接收一个数字参数，当一个用户程序想要将程序执行的控制权转移到内核，它只需要执行ECALL指令，并传入一个数字。这里的数字参数代表了应用程序想要调用的System Call
+>
+> ECALL会跳转到内核中一个特定，由内核控制的位置。我们在这节课的最后可以看到在XV6中存在一个唯一的系统调用接入点，每一次应用程序执行ECALL指令，应用程序都会通过这个接入点进入到内核中。举个例子，不论是Shell还是其他的应用程序，当它在用户空间执行fork时，它并不是直接调用操作系统中对应的函数，而是调用ECALL指令，并将fork对应的数字作为参数传给ECALL。之后再通过ECALL跳转到内核。
+>
+> 在内核侧，有一个位于syscall.c的函数syscall，每一个从应用程序发起的系统调用都会调用到这个syscall函数，syscall函数会检查ECALL的参数，通过这个参数内核可以知道需要调用的是fork（3.9会有相应的代码跟踪介绍）。
+
+
+
+#### 3.3 内核组织（宏内核 vs 微内核）
 
 操作系统的哪部分应该运行在supervisor mode？
 
@@ -698,7 +718,26 @@ Some hints:
   - 优：kerlnel简单
   - 缺：不同的servcie之间通信代价大，难以实现高性能
 
-#### xv6组织结构
+视频课程笔记：
+
+> 宏内核
+>
+> 首先，如果考虑Bug的话，这种方式不太好。在一个宏内核中，任何一个操作系统的Bug都有可能成为漏洞。因为我们现在在内核中运行了一个巨大的操作系统，出现Bug的可能性更大了。你们可以去查一些统计信息，平均每3000行代码都会有几个Bug，所以如果有许多行代码运行在内核中，那么出现严重Bug的可能性也变得更大。所以从安全的角度来说，在内核中有大量的代码是宏内核的缺点。
+>
+> 另一方面，如果你去看一个操作系统，它包含了各种各样的组成部分，比如说文件系统，虚拟内存，进程管理，这些都是操作系统内实现了特定功能的子模块。宏内核的优势在于，因为这些子模块现在都位于同一个程序中，它们可以紧密的集成在一起，这样的集成提供很好的性能。例如Linux，它就有很不错的性能。
+>
+> 在user/kernel mode反复跳转带来的性能损耗。
+
+
+
+> 微内核
+>
+> 与宏内核对比，在宏内核中如果一个应用程序需要与文件系统交互，只需要完成1次用户空间<->内核空间的跳转，所以微内核的的跳转是宏内核的两倍。通常微内核的挑战在于性能更差，这里有两个方面需要考虑：
+>
+> 1. 在user/kernel mode反复跳转带来的性能损耗。
+> 2. 在一个类似宏内核的紧耦合系统，各个组成部分，例如文件系统和虚拟内存系统，可以很容易的共享page cache。而在微内核中，每个部分之间都很好的隔离开了，这种共享更难实现。进而导致更难在微内核中得到更高的性能。
+
+#### 3.4 xv6组织结构
 
 <div align=center>
     <img src="pic/MIT/xv6kernel.png" width="60%"/>
@@ -721,7 +760,53 @@ Some hints:
 
 
 
-#### Code：starting xv6 and the first process
+#### 3.5 Real World
+
+- 宏内核：Linux（许多Unix-like OS也是）
+- 微内核：L4，Minix，QNX，（以微内核+servers方式，嵌入式领域居多）
+
+> Most operating systems have adopted the process concept, and most processes look similar to xv6’s. Modern operating systems, however, support several threads within a process, to allow a single process to exploit multiple CPUs. Supporting multiple threads in a process involves quite a bit of machinery that xv6 doesn’t have, including potential interface changes (e.g., Linux’s clone, a variant of fork), to control which aspects of a process threads share.  
+
+#### 3.6 编译运行xv6
+
+
+
+
+
+
+
+#### 3.7 QEMU
+
+QEMU是一个大型的开源C程序，你可以下载或者git clone它。在内部，QEMU的主循环中，只在做一件事情：
+
+- 读取4字节或者8字节的RISC-V指令。
+- 解析RISC-V指令，并找出对应的操作码（op code）。我们之前在看kernel.asm的时候，看过一些操作码的二进制版本。通过解析，或许可以知道这是一个ADD指令，或者是一个SUB指令。
+- 之后，在软件中执行相应的指令。
+
+这基本上就是QEMU的全部工作了，对于每个CPU核，QEMU都会运行这么一个循环。
+
+为了完成这里的工作，QEMU的主循环需要维护寄存器的状态。所以QEMU会有以C语言声明的类似于X0，X1寄存器等等。
+
+当QEMU在执行一条指令，比如(ADD a0, 7, 1)，这里会将常量7和1相加，并将结果存储在a0寄存器中，所以在这个例子中，寄存器X0会是7。
+
+之后QEMU会执行下一条指令，并持续不断的执行指令。除了仿真所有的普通权限指令之外，QEMU还会仿真所有的特殊权限指令，这就是QEMU的工作原理。对于你们来说，你们只需要认为你们跑在QEMU上的代码跟跑在一个真正的RISC-V处理器上是一样的，就像你们在6.004这门课程中使用过的RISC-V处理器一样。
+
+
+
+传给QEMU的几个参数：
+
+- -kernel：这里传递的是内核文件（kernel目录下的kernel文件），这是将在QEMU中运行的程序文件。
+- -m：这里传递的是RISC-V虚拟机将会使用的内存数量
+- -smp：这里传递的是虚拟机可以使用的CPU核数
+- -drive：传递的是虚拟机使用的磁盘驱动，这里传入的是fs.img文件
+
+#### 3.8 xv6启动过程
+
+- `kernel.ld`文件定义了内核如何被加载
+
+
+
+##### Code：zstarting xv6 and the first process
 
 - kernel/entry.S：bootloader（以只读模式保存在内存）以machine mode加载内核代码，执行 _entry，xv6从这里开始启动
 - loaders加载xv6内核代码到物理地址0x8000 0000
@@ -745,13 +830,6 @@ Some hints:
   - userinit调用系统调用exec，启动init进程，创建文件描述符0，1，2，启动shell进程
 
 > After main (kernel/main.c:11) initializes several devices and subsystems, it creates the first process by calling userinit (kernel/proc.c:212). The first process executes a small program written in RISC-V assembly, initcode.S (user/initcode.S:1), which re-enters the kernel by invoking the exec system call. As we saw in Chapter 1, exec replaces the memory and registers of the current process with a new program (in this case, /init). Once the kernel has completed exec, it returns to user space in the /init process. Init (user/init.c:15) creates a new console device file if needed and then opens it as file descriptors 0, 1, and 2. Then it starts a shell on the console. The system is up.
-
-#### Real World
-
-- 宏内核：Linux（许多Unix-like OS也是）
-- 微内核：L4，Minix，QNX，（以微内核+servers方式，嵌入式领域居多）
-
-> Most operating systems have adopted the process concept, and most processes look similar to xv6’s. Modern operating systems, however, support several threads within a process, to allow a single process to exploit multiple CPUs. Supporting multiple threads in a process involves quite a bit of machinery that xv6 doesn’t have, including potential interface changes (e.g., Linux’s clone, a variant of fork), to control which aspects of a process threads share.  
 
 
 
