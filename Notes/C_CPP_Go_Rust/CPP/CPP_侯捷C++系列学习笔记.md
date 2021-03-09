@@ -1275,12 +1275,12 @@ new，delete与malloc，free之间的关系与差别([引用](https://www.cnblog
 
 ## 四 C++STL与泛型编程
 
-数据和处理数据的方法分离，和OO（面向对象）把数据和处理数据的方法放在一起的做法不样。
+数据和处理数据的方法分离，和OO（面向对象）把数据和处理数据的方法放在一起的做法不一样。
 
 |      六大组件      |               作用               |
 | :----------------: | :------------------------------: |
-|  容器 Containers   |         存放数据的主体：         |
-| 分配器 Allocators  |                                  |
+|  容器 Containers   |         存放数据的主体；         |
+| 分配器 Allocators  |         为容器分配空间；         |
 |  算法 Algorithms   |   处理数据的方法：排序、查找等   |
 | 迭代器   Iterators | 访问数据的操作方法，像泛化的指针 |
 | 适配器   Adapters  |                                  |
@@ -1318,17 +1318,17 @@ GP 数据与方法分离，标准库采用的是GP（Generic Programming）
 
 
 
+### 分配器
 
+allocator ---> operator new delete ---> malloc freee ---> 操作系统底层接口
 
+GNU C的allocator，为什么需要allocator？
 
+- malloc实际分配的内存比需要的内存要大（有开销），head cookie、tail cookie、padding等
+- malloc分配小内存，相对开销大，每个小内存都有额外开销，malloc分配大内存相对开销小
+- allocator分配连续的大内存空间供容器使用，省掉不必要的cookie等额外开销
 
-
-
-
-
-
-
-
+查看源码MSVC，GUN GCC，LLVM等
 
 ## 五 C++11新特性
 

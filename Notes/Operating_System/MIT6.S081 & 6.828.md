@@ -1,6 +1,14 @@
+# MIT6.S081 & 6.828
 
+[TOC]
 
-## MIT6.S081 & 6.828
+### 学习资料
+
+------
+
+- 课程主页：[click here](https://pdos.csail.mit.edu/6.828/2020/overview.html)
+- B站视频 ：[click here](https://www.bilibili.com/video/BV1Dy4y1m7ZE?from=search&seid=5650197930812421215)
+- 课程翻译：[click here](https://mit-public-courses-cn-translatio.gitbook.io/mit6-s081/)
 
 ### Lec1 介绍
 
@@ -40,21 +48,38 @@ $ cd xv6-labs-2020
 $ git checkout util
 ```
 
-- step2 [安装tools](https://pdos.csail.mit.edu/6.828/2020/tools.html)
+- step2 [安装toolchain](https://pdos.csail.mit.edu/6.828/2020/tools.html)
+
+下载riscv-toolchain源码
 
 ```shell
-sudo apt-get install git build-essential gdb-multiarch qemu-system-misc gcc-riscv64-linux-gnu binutils-riscv64-linux-gnu 
+git clone --recursive https://github.com/riscv/riscv-gnu-toolchain
 ```
 
-`注意`交叉编译器的版本：ubuntu默认的gcc-7-riscv64-linux-gnu不支持-mno-relax选项，需要卸载gcc-7-riscv64-linux-gnu并安装gcc-8-riscv64-linux-gnu；然后创建链接/usr/bin/riscv64-linux-gnu-gcc指向/usr/bin/riscv64-linux-gnu-gcc-8
+安装编译依赖
 
-```shell
-$ sudo apt-get install gcc-8-riscv64-linux-gnu
+```bash
+sudo apt-get install autoconf automake autotools-dev curl libmpc-dev libmpfr-dev libgmp-dev gawk build-essential bison flex texinfo gperf libtool patchutils bc zlib1g-dev libexpat-dev
 ```
 
-```shell
-$ update-alternatives --install /usr/bin/riscv64-linux-gnu-gcc riscv64-linux-gnu-gcc /usr/bin/riscv64-linux-gnu-gcc-8 1
+配置并编译 Configure and build the toolchain:
+
+```bash
+$ cd riscv-gnu-toolchain
+$ ./configure --prefix=/usr/local
+$ sudo make
+$ cd ..
 ```
+
+更新环境变量
+
+Ubuntu环境配置文件是`~/.bashrc`，在最后一行添加：
+
+```bash
+export PATH="$PATH:/usr/local/opt/riscv-gnu-toolchain/bin"
+```
+
+此时在命令行输入`riscv64-unknown-elf-gcc -v`，如果能显示版本信息则代表安装成功。
 
 `注意` ubuntu apt安装的qemu版本太老，缺失qemu-system-riscv64
 
@@ -75,6 +100,8 @@ $ cd ..
 
 编译过程有缺失依赖再另外google解决。
 
+RSIC-V工具链安装[教程](https://www.cnblogs.com/zhayujie/p/12970935.html)
+
 - step3 进入Lab code文件夹编译并启动xv6系统
 
 ```shell
@@ -86,6 +113,16 @@ $
 ```
 
 To quit qemu type: `Ctrl-a x`
+
+- 使用gdb调试xv6系统
+
+make qemu-gdb
+
+打开新的终端，进入相同目录，
+
+执行 rsicv64-unknown-eif-gdb，
+
+执行target remote : 端口号
 
 ##### 实现一个sleep程序
 
@@ -476,20 +513,12 @@ int main(int argc, char *argv[]){
 
 ------
 
-#### 2.1 
+#### 2.1 Lab Systemcall
 
-
-
-
-
-#### 2.2 Lab
-
-##### Systemcall
-
-> In this assignment you will add a system call tracing feature that may help you when debugging later labs. You'll create a new trace system call that will control tracing. It should take one argument, an integer "mask", whose bits specify which system calls to trace. For example, to trace the fork system call, a program calls trace(1 << SYS_fork), where SYS_fork is a syscall number from kernel/syscall.h. You have to modify the xv6 kernel to print out a line when each system call is about to return, if the system call's number is set in the mask. The line should contain the process id, the name of the system call and the return value; you don't need to print the system call arguments. The trace system call should enable tracing for the process that calls it and any children that it subsequently forks, but should not affect other processes. 
+> In this assignment you will add a system call tracing feature that may help you when debugging later labs. You'll create a new trace system call that will control tracing. It should take one argument, an integer "mask", whose bits specify which system calls to trace. For example, to trace the fork system call, a program calls trace(1 << SYS_fork), where SYS_fork is a syscall number from `kernel/syscall.h`. You have to modify the xv6 kernel to print out a line when each system call is about to return, if the system call's number is set in the mask. The line should contain the process id, the name of the system call and the return value; you don't need to print the system call arguments. The trace system call should enable tracing for the process that calls it and any children that it subsequently forks, but should not affect other processes. 
 >
 
-实验前准备：
+##### 实验前准备：
 
 Before you start coding, read Chapter 2 of the [xv6 book](https://pdos.csail.mit.edu/6.828/2020/xv6/book-riscv-rev1.pdf), and Sections 4.3 and 4.4 of Chapter 4, and related source files:
 
@@ -497,7 +526,95 @@ Before you start coding, read Chapter 2 of the [xv6 book](https://pdos.csail.mit
 - The kernel-space code is `kernel/syscall.h`, kernel/syscall.c.
 - The process-related code is `kernel/proc.h` and `kernel/proc.c`.
 
-实验目的，增加一个trace系统调用，可以用来跟踪某个系统调用被执行的情况
+##### xv6 Chapter4的4.3 Code: Calling system calls
+
+系统调用被调用的流程，以`initcode.S`调用`exec`为例子，system call的调用链路：
+
+- user code通过a0和a1寄存器传递参数给exce，将系统调用号存在a7寄存器
+- 系统调用号和`syscalls`数组队对应（函数指针数组，存放真正的系统调用函数入口），在`kernel/syscall.c`
+- ecall指令是一个特殊的指令，进入到内核，依次执行uservec, usertrap, sysycall
+- syscall从寄存器 a7 获取系统调用号，
+
+> syscall (kernel/syscall.c:133) retrieves the system call number from the saved a7 in the trapframe and uses it to index into syscalls. For the first system call, a7 contains SYS_exec (kernel/syscall.h:8), resulting in a call to the system call implementation function sys_exec.
+>
+>  When the system call implementation function returns, syscall records its return value in p->trapframe->a0. This will cause the original user-space call to exec() to return that value, since the C calling convention on RISC-V places return values in a0. System calls conventionally return negative numbers to indicate errors, and zero or positive numbers for success. If the system call number is invalid, syscall prints an error and returns -1.  
+
+当系统调用实现函数返回时，syscall将其返回值记录在p->trapframe->a0中。这将导致对 exec() 的原始用户空间调用返回该值，因为RISC-V上的C调用约定将返回值放在a0中。系统调用通常返回负数表示错误，零或正数表示成功。如果系统调用号无效，syscall将打印一个错误并返回−1。
+
+```c
+//函数指针数组
+//(*sysycall)表示是一个指针
+//[] 表示是一个数组，数组指针
+//(void) 表示参数是void的函数
+//uint64 表示函数的返回值是uint64
+static uint64 (*syscalls[])(void) = {
+[SYS_fork]    sys_fork,
+[SYS_exit]    sys_exit,
+[SYS_wait]    sys_wait,
+[SYS_pipe]    sys_pipe,
+[SYS_read]    sys_read,
+[SYS_kill]    sys_kill,
+[SYS_exec]    sys_exec,
+[SYS_fstat]   sys_fstat,
+[SYS_chdir]   sys_chdir,
+[SYS_dup]     sys_dup,
+[SYS_getpid]  sys_getpid,
+[SYS_sbrk]    sys_sbrk,
+[SYS_sleep]   sys_sleep,
+[SYS_uptime]  sys_uptime,
+[SYS_open]    sys_open,
+[SYS_write]   sys_write,
+[SYS_mknod]   sys_mknod,
+[SYS_unlink]  sys_unlink,
+[SYS_link]    sys_link,
+[SYS_mkdir]   sys_mkdir,
+[SYS_close]   sys_close,
+[SYS_trace]   sys_trace,
+};
+```
+
+
+
+```c
+void
+syscall(void)
+{
+  int num;
+  struct proc *p = myproc();
+
+  num = p->trapframe->a7;              //获得系统调用号
+  if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
+    p->trapframe->a0 = syscalls[num]();//获得系统调用函数的地址，加载到a0寄存器
+  } else {
+    printf("%d %s: unknown sys call %d\n",
+            p->pid, p->name, num);
+    p->trapframe->a0 = -1;
+  }
+}
+```
+
+
+
+Makefile调用`usys.pl（perl脚本）`生成`usys.S`，里面写了具体实现，通过ecall进入kernel，通过设置寄存器a7的值，表明调用哪个system call
+
+
+
+##### xv6 Chapter4的4.4 Code: System call arguments
+
+
+
+
+
+##### 实验提示
+
+实验目的，增加一个trace系统调用，可以用来跟踪某个系统调用被执行的情况，此函数入参为一个数字，可以控制跟踪哪些system call。
+
+- trace(1<<SYS_fork)，trace(10b)，
+- trace(2)表示跟踪fork调用；trace(1<<SYS_read)，
+- trace(10 0000b)，trace(32)，表示跟踪read调用；
+- trace(10 0010b)，trace(34)，表示跟踪fork、read调用；
+- 达到的效果：trace 32 grep hello README，表示执行grep hello README时，read system call调用时，进行打印
+  
 
 We provide a `trace` user-level program that runs another program with tracing enabled (see `user/trace.c`). When you're done, you should see output like this:
 
@@ -546,11 +663,215 @@ Some hints:
 - Modify `fork()` (see `kernel/proc.c`) to copy the trace mask from the parent to the child process.
 - Modify the `syscall()` function in `kernel/syscall.c` to print the trace output. You will need to add an array of syscall names to index into.
 
+##### 具体实现
+
+- 在kernel/syscall.h中宏定义 #define SYS_trace 22
+- 修改user/usys.pl中新增一个entry
+- 在user/user.h中新增trace函数声明
+
+
+
+#### 2.2 Lab
+
+
+
 ### Lec3 OS组织和系统调用
 
 ------
 
+#### 3.1 Abstracting physical resources
 
+- 对物硬件资源进行抽象，方便用户使用
+- 隔离硬件资源，保护内核，进程间也实现隔离
+
+#### 3.2 用户模式，特权模式，和系统调用
+
+> RISC-V has three modes in which the CPU can execute instructions: **machine mode, supervisor mode, and user mode**  
+>
+> In supervisor mode the CPU is allowed to execute privileged instructions: for example, enabling and disabling interrupts, reading and writing the register that holds the address of a page table, etc.  
+>
+> The software running in kernel space (or in supervisor mode) is called the kernel.
+
+- 系统调用是用户代码与内核交互的接口（内核通过系统调用的方式对外提供服务）
+
+
+
+用户代码如何通过系统调用进入内核？
+
+> 在RISC-V中，有一个专门的指令用来实现这个功能，叫做ECALL。ECALL接收一个数字参数，当一个用户程序想要将程序执行的控制权转移到内核，它只需要执行ECALL指令，并传入一个数字。这里的数字参数代表了应用程序想要调用的System Call
+>
+> ECALL会跳转到内核中一个特定，由内核控制的位置。我们在这节课的最后可以看到在XV6中存在一个唯一的系统调用接入点，每一次应用程序执行ECALL指令，应用程序都会通过这个接入点进入到内核中。举个例子，不论是Shell还是其他的应用程序，当它在用户空间执行fork时，它并不是直接调用操作系统中对应的函数，而是调用ECALL指令，并将fork对应的数字作为参数传给ECALL。之后再通过ECALL跳转到内核。
+>
+> 在内核侧，有一个位于syscall.c的函数syscall，每一个从应用程序发起的系统调用都会调用到这个syscall函数，syscall函数会检查ECALL的参数，通过这个参数内核可以知道需要调用的是fork（3.9会有相应的代码跟踪介绍）。
+
+
+
+#### 3.3 内核组织（宏内核 vs 微内核）
+
+操作系统的哪部分应该运行在supervisor mode？
+
+- 所有系统调用都运行在supervisor mode：monolithic kernel 宏内核
+  - 优：方便管理权限（不用区分）
+  - 优：os的不同部分更容易协作
+  - 缺：os复杂，开发容易出错，且错误致命
+- 尽可能少的os代码运行在supervisor mode：microkernel 微内核
+  - 优：kerlnel简单
+  - 缺：不同的servcie之间通信代价大，难以实现高性能
+
+视频课程笔记：
+
+> 宏内核
+>
+> 首先，如果考虑Bug的话，这种方式不太好。在一个宏内核中，任何一个操作系统的Bug都有可能成为漏洞。因为我们现在在内核中运行了一个巨大的操作系统，出现Bug的可能性更大了。你们可以去查一些统计信息，平均每3000行代码都会有几个Bug，所以如果有许多行代码运行在内核中，那么出现严重Bug的可能性也变得更大。所以从安全的角度来说，在内核中有大量的代码是宏内核的缺点。
+>
+> 另一方面，如果你去看一个操作系统，它包含了各种各样的组成部分，比如说文件系统，虚拟内存，进程管理，这些都是操作系统内实现了特定功能的子模块。宏内核的优势在于，因为这些子模块现在都位于同一个程序中，它们可以紧密的集成在一起，这样的集成提供很好的性能。例如Linux，它就有很不错的性能。
+>
+> 在user/kernel mode反复跳转带来的性能损耗。
+
+
+
+> 微内核
+>
+> 与宏内核对比，在宏内核中如果一个应用程序需要与文件系统交互，只需要完成1次用户空间<->内核空间的跳转，所以微内核的的跳转是宏内核的两倍。通常微内核的挑战在于性能更差，这里有两个方面需要考虑：
+>
+> 1. 在user/kernel mode反复跳转带来的性能损耗。
+> 2. 在一个类似宏内核的紧耦合系统，各个组成部分，例如文件系统和虚拟内存系统，可以很容易的共享page cache。而在微内核中，每个部分之间都很好的隔离开了，这种共享更难实现。进而导致更难在微内核中得到更高的性能。
+
+#### 3.4 xv6组织结构
+
+<div align=center>
+    <img src="pic/MIT/xv6kernel.png" width="60%"/>
+</div>
+
+<div align=center>
+    <img src="pic/MIT/address space.png" width="60%"/>
+</div>
+
+限制process的地址空间的因素有哪些？
+
+- RISC-V是64bit位宽，只使用了38或39bits，2^38 - 1 = 0x3f ffff ffff
+- 地址空间顶部是tramponline和trapframe
+
+
+
+> A process can make a system call by executing the RISC-V ecall instruction. This instruction raises the hardware privilege level and changes the program counter to a kernel-defined entry point.
+
+- kernel/proc.h 
+
+
+
+#### 3.5 Real World
+
+- 宏内核：Linux（许多Unix-like OS也是）
+- 微内核：L4，Minix，QNX，（以微内核+servers方式，嵌入式领域居多）
+
+> Most operating systems have adopted the process concept, and most processes look similar to xv6’s. Modern operating systems, however, support several threads within a process, to allow a single process to exploit multiple CPUs. Supporting multiple threads in a process involves quite a bit of machinery that xv6 doesn’t have, including potential interface changes (e.g., Linux’s clone, a variant of fork), to control which aspects of a process threads share.  
+
+#### 3.6 编译运行xv6
+
+
+
+
+
+
+
+#### 3.7 QEMU
+
+QEMU是一个大型的开源C程序，你可以下载或者git clone它。在内部，QEMU的主循环中，只在做一件事情：
+
+- 读取4字节或者8字节的RISC-V指令。
+- 解析RISC-V指令，并找出对应的操作码（op code）。我们之前在看kernel.asm的时候，看过一些操作码的二进制版本。通过解析，或许可以知道这是一个ADD指令，或者是一个SUB指令。
+- 之后，在软件中执行相应的指令。
+
+这基本上就是QEMU的全部工作了，对于每个CPU核，QEMU都会运行这么一个循环。
+
+为了完成这里的工作，QEMU的主循环需要维护寄存器的状态。所以QEMU会有以C语言声明的类似于X0，X1寄存器等等。
+
+当QEMU在执行一条指令，比如(ADD a0, 7, 1)，这里会将常量7和1相加，并将结果存储在a0寄存器中，所以在这个例子中，寄存器X0会是7。
+
+之后QEMU会执行下一条指令，并持续不断的执行指令。除了仿真所有的普通权限指令之外，QEMU还会仿真所有的特殊权限指令，这就是QEMU的工作原理。对于你们来说，你们只需要认为你们跑在QEMU上的代码跟跑在一个真正的RISC-V处理器上是一样的，就像你们在6.004这门课程中使用过的RISC-V处理器一样。
+
+
+
+传给QEMU的几个参数：
+
+- -kernel：这里传递的是内核文件（kernel目录下的kernel文件），这是将在QEMU中运行的程序文件。
+- -m：这里传递的是RISC-V虚拟机将会使用的内存数量
+- -smp：这里传递的是虚拟机可以使用的CPU核数
+- -drive：传递的是虚拟机使用的磁盘驱动，这里传入的是fs.img文件
+
+#### 3.8 xv6启动过程
+
+- `kernel.ld`文件定义了内核如何被加载
+
+
+
+##### Code：zstarting xv6 and the first process
+
+- kernel/entry.S：bootloader（以只读模式保存在内存）以machine mode加载内核代码，执行 _entry，xv6从这里开始启动
+- loaders加载xv6内核代码到物理地址0x8000 0000
+  - 为什么不是从0x0地址开始？
+  - 因为0x0 : 0x8000 0000包含了I/O设备 
+- _entry函数设置stack，xv6开始执行C代码
+
+> The instructions at `_entry` set up a stack so that xv6 can run C code. Xv6 declares space for an initial stack, stack0, in the file start.c (kernel/start.c:11). The code at _entry loads the stack pointer register sp with the address stack0+4096, the top of the stack, because the stack on RISC-V grows down. Now that the kernel has a stack,       _entry calls into C code at start (kernel/start.c:21)
+
+- RISC-V的mret指令：进入supervisor mode
+
+- start函数：
+  - 执行一些只在machine mode下才允许的操作configuration
+
+> The function `start` performs some configuration that is only allowed in machine mode, and then switches to supervisor mode. To enter supervisor mode, RISC-V provides the instruction mret. This instruction is most often used to return from a previous call from supervisor mode to machine mode. start isn’t returning from such a call, and instead sets things up as if there had been one: it sets the previous privilege mode to supervisor in the register mstatus, it sets the return address to main by writing main’s address into the register mepc, disables virtual address translation in supervisor mode by writing 0 into the page-table register satp, and delegates all interrupts and exceptions to supervisor mode.
+>
+> Before jumping into supervisor mode, start performs one more task: it programs the clock chip to generate timer interrupts. With this housekeeping out of the way, start “returns” to supervisor mode by calling mret. This causes the program counter to change to main (kernel/main.c:11)  
+
+- main
+  - 初始化外设、子系统，创建第一个进程userinit ( kernel/proc.c )
+  - userinit调用系统调用exec，启动init进程，创建文件描述符0，1，2，启动shell进程
+
+> After main (kernel/main.c:11) initializes several devices and subsystems, it creates the first process by calling userinit (kernel/proc.c:212). The first process executes a small program written in RISC-V assembly, initcode.S (user/initcode.S:1), which re-enters the kernel by invoking the exec system call. As we saw in Chapter 1, exec replaces the memory and registers of the current process with a new program (in this case, /init). Once the kernel has completed exec, it returns to user space in the /init process. Init (user/init.c:15) creates a new console device file if needed and then opens it as file descriptors 0, 1, and 2. Then it starts a shell on the console. The system is up.
+
+
+
+#### 3.9 GDB调试使用
+
+GDB调试xv6内核
+
+```shell
+make qemu-gdb
+```
+
+打开另一个终端窗口
+
+```shell
+riscv64-unknown-elf-gdb
+```
+
+连接gdb
+
+```shell
+(GDB) target remote:25000
+```
+
+加载symbol table
+
+```shell
+(GDB) symbol-file kernel/kernel
+```
+
+GDB常用调试命令：
+
+| GDB Command |  Parameter  | Function |
+| :---------: | :---------: | :------: |
+|   b/break   | 地址/函数名 | 设置断点 |
+| c/continue  |             |   继续   |
+|   n/next    |             |          |
+|   s/step    |             |          |
+|             |             |          |
+|             |             |          |
+|             |             |          |
+|             |             |          |
+|   layout    |   split/    | 窗口布局 |
 
 
 
