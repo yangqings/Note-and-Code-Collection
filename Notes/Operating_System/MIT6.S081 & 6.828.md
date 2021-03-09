@@ -833,6 +833,48 @@ QEMU是一个大型的开源C程序，你可以下载或者git clone它。在内
 
 
 
+#### 3.9 GDB调试使用
+
+GDB调试xv6内核
+
+```shell
+make qemu-gdb
+```
+
+打开另一个终端窗口
+
+```shell
+riscv64-unknown-elf-gdb
+```
+
+连接gdb
+
+```shell
+(GDB) target remote:25000
+```
+
+加载symbol table
+
+```shell
+(GDB) symbol-file kernel/kernel
+```
+
+GDB常用调试命令：
+
+| GDB Command |  Parameter  | Function |
+| :---------: | :---------: | :------: |
+|   b/break   | 地址/函数名 | 设置断点 |
+| c/continue  |             |   继续   |
+|   n/next    |             |          |
+|   s/step    |             |          |
+|             |             |          |
+|             |             |          |
+|             |             |          |
+|             |             |          |
+|   layout    |   split/    | 窗口布局 |
+
+
+
 ### Lec4 页表
 
 ------
