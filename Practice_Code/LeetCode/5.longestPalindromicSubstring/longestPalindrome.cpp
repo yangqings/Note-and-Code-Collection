@@ -1,6 +1,6 @@
 //会文字符串，正读反读都一样的字符串
 //动态规划
-
+//时间复杂度：O（n^2）,空间复杂度O（n^2）
 class Solution {
 public:
     string longestPalindrome(string s) {
@@ -36,3 +36,6 @@ public:
         return s.substr(start,max);//获取最长回文子串
     }
 };
+
+
+//中心扩展法
