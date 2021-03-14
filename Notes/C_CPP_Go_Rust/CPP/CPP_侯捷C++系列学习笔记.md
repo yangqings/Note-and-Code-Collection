@@ -1300,11 +1300,7 @@ new，delete与malloc，free之间的关系与差别([引用](https://www.cnblog
 - Associative Container 关联式
 - Unordered Containers 无序容器(C++11增加)
 
-### 算法
-
-- sort  排序
-  - 
-- search查找
+- 
 
 
 
@@ -1329,6 +1325,32 @@ GNU C的allocator，为什么需要allocator？
 - allocator分配连续的大内存空间供容器使用，省掉不必要的cookie等额外开销
 
 查看源码MSVC，GUN GCC，LLVM等
+
+
+
+### 迭代器
+
+对外的表现，一种泛化的指针，所有的容器都有iterator class
+
+**iterator_traits**
+
+用于分离class iterators和non-calss iterators
+
+当算法通过迭代器获取相应的元素的时候，需要iterator_traits(萃取器)过滤普通指针和class-pointer
+
+
+
+### 算法
+
+算法需要迭代器提供的五个asscociated types
+
+- 
+
+
+
+- sort  排序
+  - 
+- search查找
 
 ## 五 C++11新特性
 
